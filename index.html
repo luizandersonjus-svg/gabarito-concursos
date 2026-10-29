@@ -60,7 +60,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .brand .dots{display:grid;grid-template-columns:repeat(2,9px);gap:3px}
 .brand .dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink)}
 .brand .dots i.f{background:var(--accent);border-color:var(--accent)}
-nav.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none;order:3;flex-basis:100%;margin-inline:-12px}
+.top .wrap{justify-content:space-between}
 nav.tabs a{padding:8px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:600;white-space:nowrap}
 nav.tabs a:hover{color:var(--ink);background:var(--sunk)}
 nav.tabs a[aria-current="page"]{color:var(--ink);background:var(--chip)}
@@ -239,6 +240,15 @@ textarea{min-height:120px;resize:vertical;font-family:var(--f-mono);font-size:.8
 .okmsg{color:var(--good);font-size:.85rem}
 input[type=email],input[type=password]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
 @media (max-width:800px){.auth{grid-template-columns:1fr;gap:28px;padding-block:8px}}
+/* Liberação e administração */
+.espera{max-width:560px;margin:40px auto;gap:14px}
+.ou{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem}
+.ou::before,.ou::after{content:"";flex:1;height:1px;background:var(--line)}
+.btn.google{justify-content:center;padding:10px 14px}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 12px;background:var(--sunk);border-radius:8px}
+.who-a{display:flex;flex-direction:column;min-width:0}
+.who-a b{overflow-wrap:anywhere}
+@media (max-width:700px){.arow{grid-template-columns:1fr}}
 /* Curvas */
 .chart{position:relative;margin-top:6px}
 .chart svg{touch-action:pan-y}
@@ -294,6 +304,7 @@ input[type=email],input[type=password]{background:var(--surface);border:1px soli
       <a href="#erros" data-tab="erros">Caderno de erros</a>
       <a href="#ranking" data-tab="ranking">Ranking</a>
       <a href="#perfil" data-tab="perfil">Perfil</a>
+      <a href="#admin" data-tab="admin" id="tabAdmin" hidden>Administração</a>
     </nav>
     <button class="btn primary" id="btnReg" data-act="registrar">+ Registrar estudo</button>
   </div>
@@ -1073,6 +1084,7 @@ const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 async function boot(){
   window.addEventListener("hashchange", () => { setTab(location.hash.slice(1)); });
   setTab(location.hash.slice(1) || "painel", true);
+  $("#tabs").hidden = true;
   if (!window.supabase || !window.supabase.createClient){
     $("#view").innerHTML = `<div class="empty"><h3>Não foi possível carregar a plataforma</h3><p>Verifique sua conexão com a internet e recarregue a página.</p></div>`; return;
   }
@@ -1084,7 +1096,7 @@ async function boot(){
   let sess = null;
   try { const { data } = await S.sb.auth.getSession(); sess = data && data.session; } catch(e){ sess = null; }
   if (sess && sess.user){ if (S.uid !== sess.user.id) startSupa(sess.user); }
-  else renderAuth("entrar");
+  else { await checarGoogle(); renderAuth("entrar"); }
 }
 function traduzAuth(e){
   const m = (e && e.message) || "";
@@ -1118,6 +1130,7 @@ function renderAuth(modo, msg, ok){
       <div class="field"><label for="aSenha">Senha</label><input type="password" id="aSenha" autocomplete="${ent ? "current-password" : "new-password"}" minlength="6" required>${ent ? "" : `<span class="small muted">Mínimo de 6 caracteres.</span>`}</div>
       <div class="${ok ? "okmsg" : "err"}" id="aMsg" ${msg ? "" : "hidden"}>${esc(msg || "")}</div>
       <button class="btn primary" type="submit" id="aBtn">${ent ? "Entrar" : "Criar conta e começar"}</button>
+      ${S.googleOn ? `<div class="ou"><span>ou</span></div><button type="button" class="btn google" data-google="1">Entrar com Google</button>` : ""}
       <p class="small muted" style="margin:0">${ent ? "Ainda não tem conta? Clique em Criar conta; leva menos de um minuto." : "Depois de criar a conta, você escolhe seu concurso e monta suas matérias."} Esqueceu a senha? Fale com o organizador do grupo.</p>
     </form></div>`;
 }
@@ -1141,10 +1154,22 @@ async function entrar(){
 }
 function pubRow(r){ return { apelido: r.apelido || "", concurso: r.concurso || "", stats: r.stats || {}, fcDias: r.fc_dias || {} }; }
 async function startSupa(user){
-  if (S.uid === user.id && S.meLoaded) return;
+  if (S.uid === user.id && (S.meLoaded || S.esperando)) return;
   S.uid = user.id; S.email = user.email || ""; S.mode = "db";
-  $("#tabs").hidden = false;
   $("#view").innerHTML = `<div class="empty"><h3>Carregando seus estudos…</h3><p>Seu painel, matérias e o ranking do grupo aparecem em instantes.</p></div>`;
+  try {
+    const pf = await S.sb.from("perfis").select("status,papel,nome,email").eq("user_id", user.id).maybeSingle();
+    if (pf.error) throw pf.error;
+    S.perfil = pf.data || { status: "pendente", papel: "aluno" };
+  } catch(e){
+    S.uid = null;
+    $("#view").innerHTML = `<div class="empty"><h3>Não foi possível carregar seu acesso</h3><p>${esc(errMsg(e))}</p><button class="btn primary" onclick="location.reload()">Tentar de novo</button></div>`;
+    return;
+  }
+  if (S.perfil.status !== "aprovado"){ renderEspera(); return; }
+  S.isAdmin = S.perfil.papel === "admin";
+  $("#tabs").hidden = false; $("#tabAdmin").hidden = !S.isAdmin;
+  if (!S.isAdmin && S.tab === "admin") setTab("painel", true);
   try {
     const [d, p, b] = await Promise.all([
       S.sb.from("docs").select("chave,dados"),
@@ -1179,6 +1204,11 @@ async function startSupa(user){
       S.decks[r.user_id] = r.decks || {}; render();
     })
     .subscribe();
+  if (S.isAdmin){
+    carregarAdmin();
+    let t = null;
+    S.sb.channel("adm").on("postgres_changes", { event: "*", schema: "public", table: "perfis" }, () => { clearTimeout(t); t = setTimeout(carregarAdmin, 400); }).subscribe();
+  }
 }
 async function upsertDoc(chave, dados){ const { error } = await S.sb.from("docs").upsert({ user_id: S.uid, chave, dados }); if (error) throw error; }
 async function salvarMe(body){
@@ -1189,6 +1219,74 @@ async function salvarMe(body){
 async function gravar(path, body){
   if (path.indexOf("baralhos/") === 0){ const { error } = await S.sb.from("baralhos").upsert({ user_id: S.uid, decks: body.decks || {} }); if (error) throw error; return; }
   return upsertDoc(path.split("/").pop(), body);
+}
+
+// ---------- Google, espera pela liberação e administração ----------
+async function checarGoogle(){
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
+    const r = await fetch(SB_URL + "/auth/v1/settings", { headers: { apikey: SB_KEY }, signal: ctl.signal });
+    clearTimeout(t);
+    const j = await r.json(); S.googleOn = !!(j && j.external && j.external.google);
+  } catch(e){ S.googleOn = false; }
+}
+async function entrarGoogle(){
+  const { error } = await S.sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+  if (error){ const el = $("#aMsg"); el.textContent = traduzAuth(error); el.className = "err"; el.hidden = false; }
+}
+function renderEspera(){
+  S.esperando = true;
+  $("#tabs").hidden = true; $("#btnReg").hidden = true;
+  const bl = S.perfil.status === "bloqueado";
+  $("#view").innerHTML = `<div class="espera panel stack">
+    <p class="label">${bl ? "Acesso suspenso" : "Cadastro recebido"}</p>
+    <h1>${bl ? "Seu acesso está suspenso" : "Aguardando liberação"}</h1>
+    <p class="muted" style="margin:0">${bl ? "O organizador do grupo suspendeu seu acesso à plataforma. Se achar que é um engano, fale com ele." : "Sua conta foi criada. Agora o organizador do grupo precisa liberar seu acesso. Assim que ele liberar, esta página abre a plataforma sozinha."}</p>
+    <p class="small muted" style="margin:0">Conta: <b>${esc(S.email)}</b></p>
+    <div class="controls">${bl ? "" : `<button class="btn primary" onclick="location.reload()">Verificar agora</button>`}<button class="btn" data-act="sair">Sair</button></div></div>`;
+  if (!bl) S.sb.channel("meu-perfil").on("postgres_changes", { event: "UPDATE", schema: "public", table: "perfis", filter: "user_id=eq." + S.uid }, ch => { if (ch.new && ch.new.status === "aprovado") location.reload(); }).subscribe();
+}
+async function carregarAdmin(){
+  if (!S.isAdmin) return;
+  const { data, error } = await S.sb.from("perfis").select("user_id,email,nome,status,papel,criado_em,decidido_em").order("criado_em", { ascending: false });
+  if (error){ toast(errMsg(error)); return; }
+  S.adm = { lista: data || [], ok: true };
+  const n = S.adm.lista.filter(p => p.status === "pendente").length;
+  $("#tabAdmin").textContent = n ? `Administração (${n})` : "Administração";
+  render();
+}
+async function admAlterar(id, campos, msg){
+  const { error } = await S.sb.from("perfis").update({ ...campos, decidido_em: new Date().toISOString(), decidido_por: S.uid }).eq("user_id", id);
+  if (error){ toast(errMsg(error)); return; }
+  if (campos.status === "bloqueado"){ delete S.all[id]; delete S.decks[id]; }
+  toast(msg); carregarAdmin();
+}
+const fmtDia = iso => { try { return new Date(iso).toLocaleDateString("pt-BR"); } catch(e){ return ""; } };
+function viewAdmin(){
+  if (!S.isAdmin) return `<div class="panel empty"><h3>Área restrita</h3><p>Só administradores acessam esta página.</p></div>`;
+  if (!S.adm || !S.adm.ok) return `<div class="empty"><h3>Carregando cadastros…</h3></div>`;
+  const L = S.adm.lista, pend = L.filter(p => p.status === "pendente"), apr = L.filter(p => p.status === "aprovado"), blq = L.filter(p => p.status === "bloqueado");
+  const quem = p => {
+    const pub = S.all[p.user_id], nome = (pub && pub.apelido) || p.nome || "";
+    return `<div class="who-a"><b>${esc(nome || p.email)}${p.user_id === S.uid ? " (você)" : ""}</b>${nome ? `<span class="small muted">${esc(p.email)}</span>` : ""}${pub && pub.concurso ? `<span class="small muted">${esc(pub.concurso)}</span>` : ""}</div>`;
+  };
+  const bt = (act, p, v, txt, cls) => `<button class="btn sm ${cls || ""}" data-act="${act}" data-id="${p.user_id}" data-v="${v}" data-nome="${esc(p.email)}">${txt}</button>`;
+  const linhaPend = p => `<div class="arow">${quem(p)}<span class="small muted">pediu acesso em ${fmtDia(p.criado_em)}</span><div class="controls">${bt("admSet", p, "aprovado", "Liberar", "primary")}${bt("admSet", p, "bloqueado", "Recusar", "ghost danger")}</div></div>`;
+  const linhaApr = p => `<div class="arow">${quem(p)}<span class="small muted">${p.papel === "admin" ? `<span class="pill good">administrador</span>` : "aluno"}${p.decidido_em ? " · liberado em " + fmtDia(p.decidido_em) : ""}</span><div class="controls">${p.user_id === S.uid ? "" : bt("admPapel", p, p.papel === "admin" ? "aluno" : "admin", p.papel === "admin" ? "Remover administrador" : "Tornar administrador", "ghost") + bt("admSet", p, "bloqueado", "Bloquear", "ghost danger")}</div></div>`;
+  const linhaBlq = p => `<div class="arow">${quem(p)}<span class="small muted">bloqueado${p.decidido_em ? " em " + fmtDia(p.decidido_em) : ""}</span><div class="controls">${bt("admSet", p, "aprovado", "Reativar", "")}</div></div>`;
+  return `<div class="stack">
+    <div><p class="label">Organizador</p><h1>Administração</h1><p class="muted" style="margin:6px 0 0;max-width:68ch">Quem cria uma conta só entra na plataforma depois que você libera. Alunos bloqueados perdem o acesso e saem do ranking; os dados deles ficam guardados e voltam se você reativar.</p></div>
+    <div class="kpis">
+      <div class="kpi"><span class="label">Aguardando</span><span class="v">${pend.length}</span><span class="s">pedidos de acesso</span></div>
+      <div class="kpi"><span class="label">Com acesso</span><span class="v">${apr.length}</span><span class="s">${apr.filter(p => p.papel === "admin").length} administrador(es)</span></div>
+      <div class="kpi"><span class="label">Bloqueados</span><span class="v">${blq.length}</span><span class="s">sem acesso</span></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Aguardando liberação</h2><button class="btn sm" data-act="admRecarregar">Atualizar lista</button></div>
+      ${pend.length ? `<div class="stack" style="gap:8px">${pend.map(linhaPend).join("")}</div>` : `<p class="muted" style="margin:0">Nenhum pedido pendente. Quando alguém criar conta, aparece aqui.</p>`}</div>
+    <div class="panel"><div class="panel-h"><h2>Com acesso</h2></div><div class="stack" style="gap:8px">${apr.map(linhaApr).join("")}</div></div>
+    ${blq.length ? `<div class="panel"><div class="panel-h"><h2>Bloqueados</h2></div><div class="stack" style="gap:8px">${blq.map(linhaBlq).join("")}</div></div>` : ""}
+    <div class="notice small">Para redefinir a senha de alguém, use o painel do Supabase em Authentication → Users.</div>
+  </div>`;
 }
 function startLocal(){
   S.mode = "local"; S.uid = "local";
@@ -1245,7 +1343,7 @@ function avatarDe(id){
 
 // ---------- navegação ----------
 function setTab(t, silent){
-  if (!["painel","evolucao","materias","cronograma","flashcards","erros","ranking","perfil"].includes(t)) t = "painel";
+  if (!["painel","evolucao","materias","cronograma","flashcards","erros","ranking","perfil","admin"].includes(t)) t = "painel";
   S.tab = t;
   document.querySelectorAll("#tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === t ? "page" : "false"));
   if (!silent) render(true);
@@ -1262,7 +1360,7 @@ function render(force){
   const keep = {};
   if (!force) v.querySelectorAll("input[id],textarea[id],select[id]").forEach(el => { keep[el.id] = el.type === "checkbox" ? el.checked : el.value; });
   if (!S.me){ v.innerHTML = viewOnboarding(); restoreVals(keep); return; }
-  const fn = { painel:viewPainel, evolucao:viewEvolucao, materias:viewMaterias, cronograma:viewCronograma, flashcards:viewFlashcards, erros:viewErros, ranking:viewRanking, perfil:viewPerfil }[S.tab];
+  const fn = { painel:viewPainel, evolucao:viewEvolucao, materias:viewMaterias, cronograma:viewCronograma, flashcards:viewFlashcards, erros:viewErros, ranking:viewRanking, perfil:viewPerfil, admin:viewAdmin }[S.tab];
   v.innerHTML = (S.mode === "local" ? `<div class="notice small" style="margin-bottom:20px">Modo individual: seus dados ficam só neste navegador. Abra esta página pelo link compartilhado no Claude para salvar na nuvem e entrar no ranking do grupo.</div>` : "") + fn();
   restoreVals(keep);
   drawCharts();
@@ -1690,11 +1788,22 @@ function toast(msg){
 
 // ---------- eventos ----------
 document.addEventListener("click", async e => {
+  if (e.target.closest("[data-google]")){ entrarGoogle(); return; }
   const au = e.target.closest("[data-auth]");
   if (au){ const em = ($("#aEmail") || {}).value || ""; renderAuth(au.dataset.auth); $("#aEmail").value = em; ($("#aEmail").value ? $("#aSenha") : $("#aEmail")).focus(); return; }
   const el = e.target.closest("[data-act]"); if (!el) return;
   const act = el.dataset.act, me = S.me;
   if (act === "sair"){ el.disabled = true; try { await S.sb.auth.signOut(); } catch(_){ location.reload(); } return; }
+  if (act === "admRecarregar"){ carregarAdmin(); return; }
+  if (act === "admSet" || act === "admPapel"){
+    const id = el.dataset.id, v = el.dataset.v, nome = el.dataset.nome;
+    if (act === "admSet" && v === "aprovado"){ admAlterar(id, { status: "aprovado" }, "Acesso liberado para " + nome + "."); return; }
+    const txt = act === "admPapel" ? (v === "admin" ? `Tornar ${nome} administrador? Ele poderá liberar e bloquear outros alunos.` : `Remover ${nome} dos administradores?`) : `Bloquear o acesso de ${nome}? Ele sai do ranking, mas os dados ficam guardados.`;
+    if (!(await confirmBox(txt, act === "admPapel" ? "Confirmar" : "Bloquear"))) return;
+    if (act === "admPapel") admAlterar(id, { papel: v }, v === "admin" ? nome + " agora é administrador." : nome + " voltou a ser aluno.");
+    else admAlterar(id, { status: "bloqueado" }, "Acesso de " + nome + " bloqueado.");
+    return;
+  }
   if (act === "registrar"){ openRegistro(); return; }
   if (!me) return;
   const m = el.dataset.m ? findMat(el.dataset.m) : null;
