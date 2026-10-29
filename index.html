@@ -1,0 +1,1887 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Plataforma de estudos para concursos: painel de desempenho, cronograma, flashcards, caderno de erros, curvas de aprendizado e ranking do grupo.">
+<meta property="og:title" content="Gabarito Concursos">
+<meta property="og:description" content="Estude com método, acompanhe sua evolução e cresça junto com o grupo.">
+<meta property="og:type" content="website">
+<title>Gabarito Concursos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: barra fixa com abas + coluna única de painéis; o cartão-resposta (bolinhas) marca o domínio de cada tópico */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --sunk:#F6F8FA; --ink:#132033; --muted:#5A6678; --line:#D9DFE7;
+  --accent:#1B7A52; --accent-ink:#FFFFFF; --accent-soft:#E1F0E8;
+  --good:#1B7A52; --warn:#B26B12; --bad:#BE3A2E; --chip:#E6EBF1;
+  --s1:#1B7A52; --s2:#4C6FD9;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){html{color-scheme:dark}:root:not([data-theme="light"]){
+  --bg:#0D131C; --surface:#151D29; --sunk:#111823; --ink:#E5EAF1; --muted:#93A0B3; --line:#263244;
+  --accent:#3DBE84; --accent-ink:#04140C; --accent-soft:#15322A;
+  --good:#3DBE84; --warn:#E3A647; --bad:#F06A5A; --chip:#1E2836; --s1:#2FA872; --s2:#6F86E6; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D131C; --surface:#151D29; --sunk:#111823; --ink:#E5EAF1; --muted:#93A0B3; --line:#263244;
+  --accent:#3DBE84; --accent-ink:#04140C; --accent-soft:#15322A;
+  --good:#3DBE84; --warn:#E3A647; --bad:#F06A5A; --chip:#1E2836; --s1:#2FA872; --s2:#6F86E6; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.6rem,3.2vw,2.2rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.25rem;font-weight:800;letter-spacing:-.01em}
+h3{font-size:1rem;font-weight:600}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Barra superior */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:60px;flex-wrap:wrap;padding-block:8px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:1.2rem;letter-spacing:-.02em}
+.brand .dots{display:grid;grid-template-columns:repeat(2,9px);gap:3px}
+.brand .dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink)}
+.brand .dots i.f{background:var(--accent);border-color:var(--accent)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+nav.tabs a{padding:8px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:600;white-space:nowrap}
+nav.tabs a:hover{color:var(--ink);background:var(--sunk)}
+nav.tabs a[aria-current="page"]{color:var(--ink);background:var(--chip)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--sunk)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+main{padding-block:24px 64px}
+.stack{display:flex;flex-direction:column;gap:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;min-width:0}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.notice{border:1px dashed var(--line);border-radius:var(--r);padding:12px 16px;color:var(--muted);background:var(--sunk)}
+
+/* Cabeçalho do painel */
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.countdown{text-align:right}
+.countdown .num{font-size:2rem;font-weight:700;line-height:1}
+
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:6px}
+.kpi .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.7rem;font-weight:700;line-height:1.1}
+.kpi .s{font-size:.82rem;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.ring{display:flex;align-items:center;gap:12px}
+
+/* Tabelas */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle}
+.bar{position:relative;height:8px;background:var(--chip);border-radius:4px;min-width:80px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:4px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--chip);white-space:nowrap}
+.pill.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+
+/* Onde melhorar */
+.weak{display:flex;flex-direction:column;gap:8px}
+.weak li{list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;background:var(--sunk);border-radius:8px}
+.weak ul{padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.weak .t{min-width:0}
+.weak .t b{display:block;font-weight:600}
+
+/* Heatmap */
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,12px);gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:12px;height:12px;border-radius:3px;background:var(--chip)}
+
+/* Matérias */
+.mat{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.mat-h{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;flex-wrap:wrap}
+.mat-h .name{flex:1;min-width:160px;display:flex;align-items:center;gap:10px}
+.mat-h .name h3{font-size:1.05rem}
+.mat-h .meta{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.mat-b{border-top:1px solid var(--line);padding:12px 16px 16px;background:var(--sunk)}
+.topic{padding:8px 0;border-bottom:1px dashed var(--line)}
+.topic:last-child{border-bottom:0}
+.trow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trow .tn{flex:1;min-width:140px}
+.subs{margin:6px 0 0 22px;display:flex;flex-direction:column;gap:4px;border-left:2px solid var(--line);padding-left:12px}
+.bubbles{display:inline-flex;gap:4px}
+.bubbles button{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--muted);background:transparent;cursor:pointer;padding:0;font-size:9px;font-family:var(--f-mono);color:var(--muted);display:grid;place-items:center}
+.bubbles button.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.inline-add{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.inline-add input{flex:1;min-width:160px}
+.tstat{font-size:.8rem;color:var(--muted);white-space:nowrap}
+
+/* Formulários */
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.8rem;font-weight:600;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{min-height:120px;resize:vertical;font-family:var(--f-mono);font-size:.85rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.days .field label{text-align:center}
+.days input{text-align:center;padding:8px 4px}
+.check{display:flex;align-items:center;gap:8px;cursor:pointer}
+.seg{display:inline-flex;background:var(--chip);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:6px;cursor:pointer;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* Cronograma */
+.plan{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.day{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.day-h{display:flex;justify-content:space-between;align-items:baseline}
+.day-h b{font-family:var(--f-display);font-size:1rem}
+.blk{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:8px;background:var(--sunk);border-left:4px solid var(--c,var(--muted))}
+.blk.done{opacity:.55}
+.blk.done .bt{text-decoration:line-through}
+.blk .bt{flex:1;min-width:0;font-size:.88rem;line-height:1.35}
+.blk .bt b{display:block}
+.tick{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted);background:transparent;cursor:pointer;flex:none;display:grid;place-items:center;color:var(--accent-ink);padding:0}
+.tick.on{background:var(--accent);border-color:var(--accent)}
+
+/* Ranking */
+.board{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:36px 34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px;border-radius:8px;background:var(--sunk)}
+.row.me{background:var(--accent-soft);outline:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.row .pos{font-family:var(--f-mono);font-weight:700;font-size:1.05rem;text-align:center}
+.row img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.row .who{min-width:0}
+.row .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .val{font-family:var(--f-mono);font-weight:700;text-align:right}
+.matrix td.c{text-align:center;font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:600;min-width:72px}
+.matrix td.c.best{box-shadow:inset 0 0 0 2px var(--good)}
+.matrix td.c.worst{box-shadow:inset 0 0 0 2px var(--bad)}
+.matrix th.p{text-align:center;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.help{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.help .card{background:var(--sunk);border-radius:8px;padding:12px 14px}
+
+/* Modal */
+.scrim{position:fixed;inset:0;background:rgb(8 12 20 / .5);z-index:50;display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);border-radius:14px;border:1px solid var(--line);width:min(560px,100%);max-height:calc(100% - 32px);overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.modal .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.err{color:var(--bad);font-size:.85rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;z-index:60;font-weight:600;max-width:calc(100% - 32px)}
+.empty{text-align:center;padding:32px 16px;color:var(--muted)}
+.empty h3{color:var(--ink);margin-bottom:6px}
+.chart svg{width:100%;height:auto;display:block}
+/* Flashcards */
+.modal textarea{font-family:var(--f-body);font-size:.92rem;min-height:90px}
+.modal.wide,.modal.study{width:min(680px,100%)}
+.study-h{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.face{border:1px solid var(--line);border-radius:12px;background:var(--sunk);padding:24px 20px;min-height:200px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.face .q{font-family:var(--f-display);font-size:1.25rem;font-weight:600;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere}
+.face .a{border-top:1px dashed var(--line);padding-top:12px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:1.02rem}
+.btn.flip{justify-content:center;padding:12px}
+.btn.flip small{opacity:.8;font-weight:500}
+.grades{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.grades .btn{flex-direction:column;justify-content:center;padding:10px 8px;gap:2px;white-space:normal;text-align:center}
+.grades .btn small{font-weight:500;color:var(--muted);font-size:.75rem}
+.grades .btn.g0{border-color:color-mix(in srgb,var(--bad) 55%,var(--line))}
+.grades .btn.g3{border-color:color-mix(in srgb,var(--good) 55%,var(--line))}
+.cardlist{display:flex;flex-direction:column;gap:6px}
+.citem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:12px;align-items:start;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:8px;font-size:.9rem}
+.citem .f{font-weight:600}
+.citem .f,.citem .v{white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.cact{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.decks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.deck{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);min-width:0}
+.kpi a{color:var(--accent);font-weight:600}
+/* Caderno de erros */
+.err-item{border:1px solid var(--line);border-left:4px solid var(--c,var(--muted));border-radius:var(--r);background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.err-item.sup{opacity:.65}
+.err-item .txt,.err-item .pw{white-space:pre-wrap;overflow-wrap:anywhere}
+.err-item .lembrar{background:var(--accent-soft);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+.err-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) 32px;gap:10px;align-items:center;font-size:.88rem}
+.hbar .n{text-align:right}
+/* Entrada */
+.auth{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;align-items:center;padding-block:32px 16px;max-width:1000px;margin:0 auto}
+.auth h1{font-size:clamp(1.9rem,4vw,2.7rem);margin-top:8px}
+.feat{list-style:none;padding:0;margin:28px 0 0;display:flex;flex-direction:column;gap:16px}
+.feat li{display:flex;flex-direction:column;gap:2px;padding-left:14px;border-left:3px solid var(--accent)}
+.feat span{color:var(--muted)}
+.auth-form{gap:14px}
+.auth-form .seg{display:flex}
+.auth-form .seg button{flex:1}
+.auth-form .btn.primary{justify-content:center;padding:11px 14px}
+.okmsg{color:var(--good);font-size:.85rem}
+input[type=email],input[type=password]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+@media (max-width:800px){.auth{grid-template-columns:1fr;gap:28px;padding-block:8px}}
+/* Curvas */
+.chart{position:relative;margin-top:6px}
+.chart svg{touch-action:pan-y}
+.ct{font-family:var(--f-body);font-size:11px;fill:var(--muted)}
+.ct.cv{fill:var(--ink);font-weight:700;font-family:var(--f-mono)}
+.tip{position:absolute;top:6px;z-index:2;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;line-height:1.55;box-shadow:0 4px 14px rgb(0 0 0 / .14);pointer-events:none;max-width:calc(100% - 8px)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.ln{display:inline-block;width:18px;height:2px;margin-right:6px;vertical-align:middle;border-radius:1px}
+.ln.dash{background:repeating-linear-gradient(90deg,var(--c) 0 6px,transparent 6px 10px)}
+.lgi{display:inline-flex;align-items:center}
+.lgi b{margin-left:5px;color:var(--ink)}
+.stack-bar{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;min-width:0}
+.stack-bar i{display:block;min-width:4px}
+.stack-bar.empty-bar{background:var(--chip)}
+.frows{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.frow{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr) 52px;gap:12px;align-items:center;font-size:.9rem}
+.frow > .num{text-align:right}
+.fname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdata{margin-top:8px;font-size:.85rem}
+.tdata summary{cursor:pointer;color:var(--muted)}
+@media (max-width:600px){
+  .panel{padding:16px}
+  .days{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .row{grid-template-columns:28px 30px minmax(0,1fr) auto;gap:8px}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .kpi .v{font-size:1.4rem}
+  .citem{grid-template-columns:1fr}
+  .cact{justify-content:flex-start}
+  .hbar{grid-template-columns:minmax(0,120px) minmax(0,1fr) 28px}
+  .frow{grid-template-columns:minmax(0,1fr) 48px;row-gap:4px}
+  .frow .fname{grid-column:1/-1}
+}
+@media (max-width:860px){
+  nav.tabs{order:3;flex-basis:100%}
+  .top .wrap{justify-content:space-between}
+}
+@media (prefers-reduced-motion: no-preference){
+  .meter i,.bar i{transition:width .4s ease}
+}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand" aria-label="Gabarito"><span class="dots" aria-hidden="true"><i class="f"></i><i></i><i></i><i class="f"></i></span>Gabarito</div>
+    <nav class="tabs" id="tabs">
+      <a href="#painel" data-tab="painel">Painel</a>
+      <a href="#evolucao" data-tab="evolucao">Evolução</a>
+      <a href="#materias" data-tab="materias">Matérias</a>
+      <a href="#cronograma" data-tab="cronograma">Cronograma</a>
+      <a href="#flashcards" data-tab="flashcards">Flashcards</a>
+      <a href="#erros" data-tab="erros">Caderno de erros</a>
+      <a href="#ranking" data-tab="ranking">Ranking</a>
+      <a href="#perfil" data-tab="perfil">Perfil</a>
+    </nav>
+    <button class="btn primary" id="btnReg" data-act="registrar">+ Registrar estudo</button>
+  </div>
+</header>
+<main class="wrap" id="view"><div class="empty"><h3>Carregando seus estudos…</h3><p>Seu painel, matérias e o ranking do grupo aparecem aqui em instantes.</p></div></main>
+<div id="modalRoot"></div>
+
+<script src="supabase.js"></script>
+<script>
+(function(){
+"use strict";
+// ---------- utilidades ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-4);
+const clone = o => JSON.parse(JSON.stringify(o));
+const pad = n => String(n).padStart(2,"0");
+const dkey = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today = () => dkey(new Date());
+const parseD = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (k, n) => { const d = parseD(k); d.setDate(d.getDate()+n); return dkey(d); };
+const diffDays = (a, b) => Math.round((parseD(b) - parseD(a)) / 864e5);
+const norm = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+const pct = (a, q) => q > 0 ? Math.round(100 * a / q) : null;
+const fmtH = min => { min = Math.round(min||0); const h = Math.floor(min/60), m = min%60; return h ? (m ? h+"h"+pad(m) : h+"h") : m+"min"; };
+const fmtN = n => (n||0).toLocaleString("pt-BR");
+const WD = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const WDL = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+const MES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const fmtD = k => { const d = parseD(k); return d.getDate()+" "+MES[d.getMonth()]; };
+const CORES = ["#2F6FDE","#1C9C6B","#D9822B","#C2416B","#7A5AF5","#0E9AA7","#B08900","#6B7A8F","#E0564A","#3B8F2F"];
+const TIPOS = {teoria:"Teoria", questoes:"Questões", revisao:"Revisão"};
+const STATUS = ["Não visto","Teoria lida","Revisado","Dominado"];
+const accClass = p => p == null ? "" : p >= 75 ? "good" : p >= 60 ? "warn" : "bad";
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+// ---------- estado ----------
+const S = {
+  mode: "loading",   // loading | db | local
+  uid: null, me: null, meLoaded: false,
+  months: {},        // "YYYY-MM" -> itens[]
+  all: {},           // uid -> doc do aluno
+  profiles: {},
+  db: null, user: null, meRef: null,
+  tab: "painel",
+  priv: {}, decks: {}, pending: new Set(), study: null,
+  ui: { open: {}, rkMetric: "pontos", rkPeriod: "30", rkGroup: "concurso", importFor: null, addSubFor: null,
+        fcView: "meus", fcOpen: {}, fcShufMat: "", fcShufN: "20", bulkMat: "", dkGroup: "concurso", erMat: "", erMot: "", erSt: "pend", lastFcMat: null, evMat: "", evModo: "semana" },
+  dirty: false
+};
+
+// ---------- camada de dados ----------
+let chain = Promise.resolve();
+function queue(fn){ chain = chain.then(fn).catch(e => toast(errMsg(e))); return chain; }
+function errMsg(e){
+  const c = e && e.code, msg = (e && e.message) || "";
+  if (c === "23514") return "Este conteúdo passou do limite de tamanho. Apague itens antigos e tente de novo.";
+  if (/JWT|token|session/i.test(msg)) return "Sua sessão expirou. Recarregue a página e entre de novo.";
+  if (/fetch|network/i.test(msg)) return "Sem conexão com o servidor. Verifique a internet e tente de novo.";
+  if (c === "42501") return "Você não tem permissão para alterar este dado.";
+  if (c === "quota_exceeded") return "O espaço de dados desta página está cheio. Apague registros antigos para continuar.";
+  if (c === "invalid_argument") return "Você só pode ver esta página. Peça ao dono acesso de Colaborador para salvar seus estudos.";
+  if (c === "resource_exhausted") return "Muitas alterações seguidas. Espere alguns segundos e tente de novo.";
+  return "Não foi possível salvar agora. Tente novamente em instantes.";
+}
+let saveTimer = null;
+function saveMe(){
+  if (!S.me) return;
+  S.me.stats = computeStats();
+  S.me.atualizadoEm = new Date().toISOString();
+  if (S.mode === "local"){ persistLocal(); render(); return; }
+  S.all[S.uid] = S.me;
+  render();
+  clearTimeout(saveTimer);
+  S.saving = true;
+  saveTimer = setTimeout(() => { saveTimer = null; const body = clone(S.me); queue(() => salvarMe(body)).then(() => { if (!saveTimer) S.saving = false; }); }, 350);
+}
+function saveMonth(mk){
+  const itens = S.months[mk] || [];
+  if (S.mode === "local"){ persistLocal(); return; }
+  const body = { itens: clone(itens) };
+  queue(() => upsertDoc("mes-" + mk, body));
+}
+function persistLocal(){ lsSet("gabarito-local", { me: S.me, months: S.months, priv: S.priv }); S.all = S.me ? { local: S.me } : {}; }
+
+function allItems(){ const out = []; Object.values(S.months).forEach(a => (a||[]).forEach(i => out.push(i))); return out.sort((a,b) => (a.data < b.data ? 1 : a.data > b.data ? -1 : (b.ts||0)-(a.ts||0))); }
+
+// ---------- estrutura das matérias ----------
+function leaves(m){
+  const out = [];
+  (m.topicos||[]).forEach(t => {
+    if (t.subs && t.subs.length) t.subs.forEach(s => out.push({ mid:m.id, tid:t.id, sid:s.id, nome:s.nome, pai:t.nome, status:s.status||0, ref:s }));
+    else out.push({ mid:m.id, tid:t.id, sid:null, nome:t.nome, pai:null, status:t.status||0, ref:t });
+  });
+  if (!out.length) out.push({ mid:m.id, tid:null, sid:null, nome:m.nome, pai:null, status:0, ref:null, vazio:true });
+  return out;
+}
+const leafKey = (mid,tid,sid) => mid+"|"+(tid||"")+"|"+(sid||"");
+function findMat(id){ return (S.me?.materias||[]).find(m => m.id === id); }
+function findTop(m, tid){ return (m?.topicos||[]).find(t => t.id === tid); }
+function topicLabel(mid, tid, sid){
+  const m = findMat(mid); if (!m) return "";
+  const t = findTop(m, tid); if (!t) return "";
+  const s = sid ? (t.subs||[]).find(x => x.id === sid) : null;
+  return s ? t.nome + " › " + s.nome : t.nome;
+}
+
+// ---------- estatísticas ----------
+function computeStats(){
+  const items = allItems();
+  const total = { min:0, q:0, a:0 }, porMat = {}, dias = {}, porLeaf = {}, porTop = {};
+  const corte = addDays(today(), -120), sem = {}, corteSem = addDays(today(), -7*16);
+  items.forEach(i => {
+    total.min += i.min||0; total.q += i.q||0; total.a += i.a||0;
+    const pm = porMat[i.mid] || (porMat[i.mid] = { min:0, q:0, a:0 });
+    pm.min += i.min||0; pm.q += i.q||0; pm.a += i.a||0;
+    if (i.data >= corte){ const d = dias[i.data] || (dias[i.data] = { min:0, q:0, a:0 }); d.min += i.min||0; d.q += i.q||0; d.a += i.a||0; }
+    if (i.data >= corteSem && i.q){ const mm = findMat(i.mid); if (mm){ const o = sem[weekKey(i.data)] || (sem[weekKey(i.data)] = {}), k = norm(mm.nome), pp = o[k] || (o[k] = [0, 0]); pp[0] += i.q || 0; pp[1] += i.a || 0; } }
+  });
+  const materias = {}; let somaN = 0, somaP = 0;
+  (S.me?.materias||[]).forEach(m => {
+    const lv = leaves(m).filter(l => !l.vazio);
+    const cov = lv.length ? lv.reduce((s,l) => s + l.status, 0) / (3*lv.length) : 0;
+    const pm = porMat[m.id] || { min:0, q:0, a:0 };
+    const acc = pm.q ? pm.a/pm.q : 0;
+    const nivel = Math.round(100*(0.4*cov + 0.6*acc));
+    materias[m.id] = { nome:m.nome, key:norm(m.nome), cor:m.cor, min:pm.min, q:pm.q, a:pm.a, cov:Math.round(cov*100), nivel };
+    const p = m.peso||3; somaN += nivel*p; somaP += p;
+  });
+  return { total, materias, dias, sem, nivel: somaP ? Math.round(somaN/somaP) : 0 };
+}
+function localDetail(){
+  const items = allItems(), byLeaf = {}, byTop = {}, last = {};
+  items.forEach(i => {
+    const k = leafKey(i.mid, i.tid, i.sid);
+    const b = byLeaf[k] || (byLeaf[k] = { q:0, a:0, min:0 }); b.q += i.q||0; b.a += i.a||0; b.min += i.min||0;
+    if (i.tid){ const tk = i.mid+"|"+i.tid; const t = byTop[tk] || (byTop[tk] = { q:0, a:0, min:0 }); t.q += i.q||0; t.a += i.a||0; t.min += i.min||0; }
+    if (!last[k] || last[k] < i.data) last[k] = i.data;
+  });
+  return { byLeaf, byTop, last };
+}
+function streak(dias){
+  let n = 0, k = today();
+  if (!(dias[k] && dias[k].min > 0)) k = addDays(k, -1);
+  while (dias[k] && (dias[k].min > 0 || dias[k].q > 0)){ n++; k = addDays(k, -1); }
+  return n;
+}
+function periodSum(st, period){
+  if (!st) return { min:0, q:0, a:0 };
+  if (period === "total") return st.total || { min:0, q:0, a:0 };
+  const n = Number(period), ini = addDays(today(), -(n-1)), o = { min:0, q:0, a:0 };
+  Object.entries(st.dias||{}).forEach(([k,v]) => { if (k >= ini){ o.min += v.min||0; o.q += v.q||0; o.a += v.a||0; } });
+  return o;
+}
+
+// ---------- armazenamento privado e compartilhado ----------
+const timers = {};
+function writeDoc(path, bodyFn){
+  if (S.mode === "local"){ persistLocal(); return; }
+  S.pending.add(path); clearTimeout(timers[path]);
+  timers[path] = setTimeout(() => {
+    delete timers[path];
+    const body = clone(bodyFn());
+    queue(() => gravar(path, body)).then(() => { if (!timers[path]) S.pending.delete(path); });
+  }, 500);
+}
+function privPath(key){ return "data/users/" + S.uid + "/" + key; }
+function savePriv(key){ writeDoc(privPath(key), () => S.priv[key] || {}); render(); }
+function saveDecks(){ writeDoc("baralhos/" + S.uid, () => ({ decks: S.decks[S.uid] || {} })); render(); }
+function restoreVals(keep){
+  Object.entries(keep).forEach(([id, val]) => { const el = document.getElementById(id); if (!el) return; if (el.type === "checkbox") el.checked = val; else el.value = val; });
+}
+const LIMITE = "Esta matéria chegou ao limite de espaço. Os itens mais recentes não foram salvos; apague alguns antigos.";
+function ajustaLimite(key, arr){ const d = S.priv[key]; let n = 0; while (d && d[arr] && d[arr].length && JSON.stringify(d).length > 240000){ d[arr].pop(); n++; } return n; }
+function cabeDecks(){
+  if (JSON.stringify({ decks: S.decks[S.uid] || {} }).length > 240000){ toast("Seus baralhos compartilhados passaram do limite de tamanho. Remova um baralho ou compartilhe menos cards."); return false; }
+  return true;
+}
+function fcDoc(mid){ const k = "fc-" + mid; if (!S.priv[k] || !Array.isArray(S.priv[k].cards)) S.priv[k] = { cards: [] }; return S.priv[k]; }
+function erDoc(mid){ const k = "er-" + mid; if (!S.priv[k] || !Array.isArray(S.priv[k].itens)) S.priv[k] = { itens: [] }; return S.priv[k]; }
+function allCards(){ const out = []; (S.me?.materias || []).forEach(m => (S.priv["fc-" + m.id]?.cards || []).forEach(c => out.push({ ...c, mid: m.id }))); return out; }
+function allErros(){ const out = []; (S.me?.materias || []).forEach(m => (S.priv["er-" + m.id]?.itens || []).forEach(e => out.push({ ...e, mid: m.id }))); return out; }
+function fcParaHoje(mid){ const cs = allCards().filter(c => !mid || c.mid === mid); return cs.filter(c => c.srs && c.srs.due <= today()).length + Math.min(20, cs.filter(c => !c.srs).length); }
+function fcSum(d, period){
+  const o = { n: 0, ok: 0 }, ini = period === "total" ? "" : addDays(today(), -(Number(period) - 1));
+  Object.entries(d.fcDias || {}).forEach(([k, v]) => { if (k >= ini){ o.n += v.n || 0; o.ok += v.ok || 0; } });
+  return o;
+}
+function estudados(m){ const lv = leaves(m).filter(l => !l.vazio); return lv.length ? `<b class="num">${lv.filter(l => l.status >= 1).length}</b> de ${lv.length} tópicos estudados` : "sem tópicos"; }
+function segHtml(key, opts){ return `<div class="seg" role="group">${opts.map(([v, l]) => `<button type="button" class="${S.ui[key] === v ? "on" : ""}" data-act="rk" data-k="${key}" data-v="${v}">${l}</button>`).join("")}</div>`; }
+function matOptions(sel, todas){ return (todas ? `<option value="">${todas}</option>` : "") + (S.me.materias || []).map(m => `<option value="${m.id}" ${sel === m.id ? "selected" : ""}>${esc(m.nome)}</option>`).join(""); }
+function shuffle(a){ for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function wireTopics(ids, pre){
+  const [mS, tS, sS] = ids.map(i => document.getElementById(i));
+  const fillSub = () => {
+    const m = findMat(mS.value), t = findTop(m, tS.value), subs = t?.subs || [];
+    sS.innerHTML = `<option value="">${subs.length ? "Tópico inteiro" : "—"}</option>` + subs.map(s => `<option value="${s.id}">${esc(s.nome)}</option>`).join("");
+    sS.disabled = !subs.length;
+    if (pre.sid && t && t.id === pre.tid) sS.value = pre.sid;
+  };
+  const fillTop = () => {
+    const m = findMat(mS.value);
+    tS.innerHTML = `<option value="">Matéria inteira</option>` + (m?.topicos || []).map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join("");
+    if (pre.tid && m && m.id === pre.mid) tS.value = pre.tid;
+    fillSub();
+  };
+  mS.onchange = () => { pre.tid = null; pre.sid = null; fillTop(); };
+  tS.onchange = () => { pre.sid = null; fillSub(); };
+  fillTop();
+}
+
+// ---------- repetição espaçada ----------
+function nextSrs(c, g){
+  const s = Object.assign({ iv: 0, ef: 2.5, reps: 0, lapses: 0 }, (c && c.srs) || {});
+  let iv;
+  if (g === 0){ iv = 0; s.ef = Math.max(1.3, s.ef - 0.2); s.lapses++; }
+  else if (g === 1){ iv = Math.max(1, Math.round(s.iv * 1.2)); s.ef = Math.max(1.3, s.ef - 0.15); }
+  else if (g === 2){ iv = s.iv === 0 ? 1 : s.iv < 3 ? 3 : Math.round(s.iv * s.ef); }
+  else { iv = s.iv === 0 ? 4 : Math.round(Math.max(s.iv + 2, s.iv * s.ef * 1.3)); s.ef = Math.min(3, s.ef + 0.15); }
+  s.iv = iv; s.reps++; s.due = addDays(today(), iv); s.ult = today();
+  return s;
+}
+function ivLabel(n){
+  if (n === 0) return "hoje";
+  if (n === 1) return "1 dia";
+  if (n < 30) return n + " dias";
+  if (n < 365){ const m = Math.round(n / 30); return m === 1 ? "1 mês" : m + " meses"; }
+  return (n / 365).toFixed(1).replace(".", ",") + " anos";
+}
+function contaFC(ok){
+  const me = S.me, k = today(); me.fcDias = me.fcDias || {};
+  const d = me.fcDias[k] || (me.fcDias[k] = { n: 0, ok: 0 }); d.n++; if (ok) d.ok++;
+  const corte = addDays(k, -120); Object.keys(me.fcDias).forEach(x => { if (x < corte) delete me.fcDias[x]; });
+}
+
+// ---------- sessão de estudo (cards e erros) ----------
+function startStudy(opts){
+  if (!opts.items.length){ toast(opts.vazio || "Nada para revisar agora."); return; }
+  S.study = { ...opts, i: 0, shown: false, ok: 0, done: 0 };
+  renderStudy();
+}
+function renderStudy(){
+  const st = S.study, root = $("#modalRoot");
+  if (!st){ closeModal(); return; }
+  if (st.i >= st.items.length){
+    const resumo = st.mode === "erros" ? `${st.done} ${st.done === 1 ? "erro revisado" : "erros revisados"}, ${st.ok} ${st.ok === 1 ? "marcado" : "marcados"} como superado.` : `${st.done} cards · ${st.done ? Math.round(100 * st.ok / st.done) : 0}% lembrados.`;
+    root.innerHTML = `<div class="scrim"><div class="modal study" role="dialog" aria-modal="true"><h2>Sessão concluída</h2><p style="margin:0">${resumo}</p><div class="actions"><button class="btn primary" id="sClose" data-sact="close">Fechar</button></div></div></div>`;
+    $("#sClose").focus();
+    return;
+  }
+  const it = st.items[st.i];
+  const grades = st.mode === "srs"
+    ? [[0, "Errei"], [1, "Difícil"], [2, "Bom"], [3, "Fácil"]].map(([g, l]) => `<button class="btn g${g}" data-sact="grade" data-g="${g}">${l}<small>${g + 1} · volta em ${ivLabel(nextSrs(it.card, g).iv)}</small></button>`).join("")
+    : st.mode === "erros"
+      ? `<button class="btn g0" data-sact="grade" data-g="0">Ainda erraria<small>1 · continua pendente</small></button><button class="btn g3" data-sact="grade" data-g="3">Já sei<small>2 · marcar superado</small></button>`
+      : `<button class="btn g0" data-sact="grade" data-g="0">Errei<small>tecla 1</small></button><button class="btn g3" data-sact="grade" data-g="3">Acertei<small>tecla 2</small></button>`;
+  root.innerHTML = `<div class="scrim"><div class="modal study" role="dialog" aria-modal="true" aria-label="${esc(st.title)}">
+    <div class="study-h"><div><span class="label">${esc(st.title)}</span><div class="small muted num">${st.i + 1} de ${st.items.length}</div></div><button class="btn ghost sm" id="sClose" data-sact="close">Encerrar</button></div>
+    <div class="meter"><i style="width:${Math.round(100 * st.i / st.items.length)}%"></i></div>
+    <div class="face" style="border-left:4px solid ${it.cor || "var(--line)"}">
+      <span class="small muted">${esc(it.meta || "")}</span>
+      <div class="q">${esc(it.front)}</div>
+      ${st.shown ? `<div class="a">${esc(it.back || "(sem resposta cadastrada)")}</div>` : ""}
+    </div>
+    ${st.shown ? `<div class="grades">${grades}</div>` : `<button class="btn primary flip" data-sact="flip">Mostrar resposta <small>(espaço)</small></button>`}
+  </div></div>`;
+}
+function gradeStudy(g){
+  const st = S.study; if (!st || st.i >= st.items.length) return;
+  const it = st.items[st.i];
+  st.done++; if (g > 0) st.ok++;
+  st.onGrade(it, g);
+  if (st.mode === "srs" && g === 0 && !it.relearn){ const cur = fcDoc(it.mid).cards.find(x => x.id === it.card.id); if (cur) st.items.push({ ...it, relearn: true, card: clone(cur) }); }
+  st.i++; st.shown = false; renderStudy();
+}
+function cardItem(c){
+  const m = findMat(c.mid), tl = c.tid ? topicLabel(c.mid, c.tid, c.sid) : "";
+  return { mid: c.mid, card: clone(c), front: c.f, back: c.v, cor: m?.cor, meta: (m?.nome || "") + (tl ? " · " + tl : "") };
+}
+function sessaoRevisao(mid){
+  const cards = allCards().filter(c => !mid || c.mid === mid), hoje = today();
+  const due = cards.filter(c => c.srs && c.srs.due <= hoje).sort((a, b) => (a.srs.due < b.srs.due ? -1 : a.srs.due > b.srs.due ? 1 : 0));
+  const novos = cards.filter(c => !c.srs).slice(0, 20);
+  startStudy({ title: "Revisão do dia", mode: "srs", vazio: "Nenhum card para revisar hoje. Volte amanhã ou use o modo embaralhado.", items: [...due, ...novos].map(cardItem), onGrade: (it, g) => {
+    const c = fcDoc(it.mid).cards.find(x => x.id === it.card.id);
+    if (c){ c.srs = nextSrs(c, g); writeDoc(privPath("fc-" + it.mid), () => S.priv["fc-" + it.mid]); }
+    contaFC(g > 0); saveMe();
+  } });
+}
+function sessaoEmbaralhada(mid, n){
+  const items = shuffle(allCards().filter(c => !mid || c.mid === mid)).slice(0, n || 20).map(cardItem);
+  startStudy({ title: "Embaralhado", mode: "livre", vazio: "Não há cards nesta matéria ainda.", items, onGrade: (it, g) => { contaFC(g > 0); saveMe(); } });
+}
+function praticarBaralho(o, did){
+  const d = S.decks[o]?.[did]; if (!d) return;
+  const items = shuffle((d.cards || []).map(c => ({ front: c.f, back: c.v, cor: d.cor, meta: d.materia + " · baralho de " + nomeDe(o) }))).slice(0, 50);
+  startStudy({ title: d.titulo, mode: "livre", vazio: "Este baralho está vazio.", items, onGrade: (it, g) => { contaFC(g > 0); saveMe(); } });
+}
+function copiarBaralho(o, did){
+  const d = S.decks[o]?.[did]; if (!d) return;
+  let m = (S.me.materias || []).find(x => norm(x.nome) === d.mkey), criada = false;
+  if (!m){ m = { id: uid(), nome: d.materia, cor: CORES[(S.me.materias || []).length % CORES.length], peso: 3, topicos: [] }; S.me.materias = S.me.materias || []; S.me.materias.push(m); criada = true; saveMe(); }
+  const doc = fcDoc(m.id), have = new Set(doc.cards.map(c => c.orig).filter(Boolean)); let n = 0;
+  (d.cards || []).forEach(c => { const orig = o + ":" + c.id; if (have.has(orig)) return; doc.cards.push({ id: uid(), f: c.f, v: c.v, tid: null, sid: null, criado: today(), orig }); n++; });
+  const cut = ajustaLimite("fc-" + m.id, "cards");
+  savePriv("fc-" + m.id);
+  toast(cut ? LIMITE : n ? `${n} cards copiados para ${m.nome}${criada ? " (matéria criada)" : ""}.` : "Você já tem todos os cards deste baralho.");
+}
+function sessaoErros(){
+  const items = allErros().filter(e => !e.sup).sort((a, b) => ((a.ultRev || a.data) < (b.ultRev || b.data) ? -1 : 1)).slice(0, 30).map(e => {
+    const m = findMat(e.mid), tl = e.tid ? topicLabel(e.mid, e.tid, e.sid) : "";
+    return { mid: e.mid, eid: e.id, front: e.enun || "(sem enunciado anotado)", back: e.lembrar || "", cor: m?.cor, meta: (m?.nome || "") + (tl ? " · " + tl : "") + " · " + (MOTIVOS[e.motivo] || "") };
+  });
+  startStudy({ title: "Revisão do caderno de erros", mode: "erros", vazio: "Nenhum erro pendente no caderno.", items, onGrade: (it, g) => {
+    const e = erDoc(it.mid).itens.find(x => x.id === it.eid); if (!e) return;
+    e.revs = (e.revs || 0) + 1; e.ultRev = today(); if (g > 0) e.sup = true;
+    savePriv("er-" + it.mid);
+  } });
+}
+
+// ---------- caderno de erros ----------
+const MOTIVOS = { conteudo: "Não sabia o conteúdo", confusao: "Confundi conceitos", atencao: "Falta de atenção / li errado", pegadinha: "Pegadinha da banca", esqueci: "Esqueci (já tinha estudado)", tempo: "Falta de tempo / chute" };
+const DICAS = {
+  conteudo: "volte à teoria desses tópicos antes de fazer mais questões.",
+  confusao: "monte quadros comparativos e flashcards com as diferenças entre os conceitos.",
+  atencao: "grife o comando da questão (CORRETO, INCORRETO, EXCETO) antes de ler as alternativas.",
+  pegadinha: "resolva mais questões da mesma banca e anote o padrão das pegadinhas.",
+  esqueci: "aumente as revisões; transforme esses erros em flashcards.",
+  tempo: "treine com simulados cronometrados e defina um tempo máximo por questão."
+};
+function ofertaErros(it, n){
+  const m = findMat(it.mid);
+  $("#modalRoot").innerHTML = `<div class="scrim"><div class="modal" role="dialog" aria-modal="true"><h2>Anotar no caderno de erros?</h2><p style="margin:0">Você errou ${n} ${n > 1 ? "questões" : "questão"} de ${esc(m?.nome || "")}. Anotar agora ajuda a não repetir o erro na prova.</p><div class="actions"><button class="btn" id="cNo">Depois</button><button class="btn primary" id="cOk">Anotar erros</button></div></div></div>`;
+  $("#cNo").onclick = closeModal;
+  $("#cOk").onclick = () => openErro({ mid: it.mid, tid: it.tid, sid: it.sid, data: it.data });
+  $("#cOk").focus();
+}
+function openErro(pre, editId){
+  const mats = S.me.materias || [];
+  if (!mats.length){ toast("Cadastre uma matéria antes de anotar erros."); location.hash = "materias"; return; }
+  pre = { ...(pre || {}) };
+  const origMid = pre.mid || mats[0].id;
+  const ed = editId ? erDoc(origMid).itens.find(x => x.id === editId) : null;
+  const v = ed ? { ...ed } : pre;
+  pre.mid = origMid; if (ed){ pre.tid = ed.tid; pre.sid = ed.sid; }
+  $("#modalRoot").innerHTML = `<div class="scrim"><form class="modal wide" id="eForm" novalidate>
+    <h2>${ed ? "Editar erro" : "Anotar erro"}</h2>
+    <div class="form-grid">
+      <div class="field"><label for="eData">Data</label><input type="date" id="eData" value="${esc(v.data || today())}" max="${today()}"></div>
+      <div class="field"><label for="eBanca">Banca / prova (opcional)</label><input type="text" id="eBanca" maxlength="60" value="${esc(v.banca || "")}" placeholder="Ex.: FGV 2024"></div>
+    </div>
+    <div class="field"><label for="eMat">Matéria</label><select id="eMat">${matOptions(origMid, "")}</select></div>
+    <div class="form-grid"><div class="field"><label for="eTop">Tópico</label><select id="eTop"></select></div><div class="field"><label for="eSub">Subtópico</label><select id="eSub"></select></div></div>
+    <div class="field"><label for="eMot">Por que errei</label><select id="eMot">${Object.entries(MOTIVOS).map(([k, l]) => `<option value="${k}" ${(v.motivo || "conteudo") === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    <div class="field"><label for="eEnun">Questão ou resumo do que foi cobrado</label><textarea id="eEnun" maxlength="1500" placeholder="Ex.: A banca afirmou que a autoexecutoriedade está presente em todos os atos administrativos.">${esc(v.enun || "")}</textarea></div>
+    <div class="field"><label for="eLemb">Resposta certa e o que lembrar</label><textarea id="eLemb" maxlength="1000" placeholder="Ex.: Errado. A autoexecutoriedade não existe em todos os atos; a multa, por exemplo, não é autoexecutória.">${esc(v.lembrar || "")}</textarea></div>
+    ${ed ? "" : `<label class="check"><input type="checkbox" id="eFc"> Criar também um flashcard com este erro</label>`}
+    <div class="err" id="eErr" hidden></div>
+    <div class="actions"><button type="button" class="btn" id="eNo">Cancelar</button>${ed ? "" : `<button type="submit" class="btn" data-mais="1">Salvar e anotar outro</button>`}<button class="btn primary" type="submit">Salvar</button></div>
+  </form></div>`;
+  wireTopics(["eMat", "eTop", "eSub"], pre);
+  $("#eNo").onclick = closeModal;
+  $("#eForm").onsubmit = e => {
+    e.preventDefault();
+    const enun = $("#eEnun").value.trim(), lemb = $("#eLemb").value.trim(), mid = $("#eMat").value, data = $("#eData").value || today();
+    const er = $("#eErr");
+    if (!enun && !lemb){ er.textContent = "Escreva a questão ou o que você precisa lembrar."; er.hidden = false; return; }
+    if (data > today()){ er.textContent = "A data não pode ser no futuro."; er.hidden = false; return; }
+    const item = { id: ed ? ed.id : uid(), data, tid: $("#eTop").value || null, sid: $("#eSub").value || null, motivo: $("#eMot").value, banca: $("#eBanca").value.trim().slice(0, 60), enun: enun.slice(0, 1500), lembrar: lemb.slice(0, 1000), revs: ed?.revs || 0, ultRev: ed?.ultRev || null, sup: ed?.sup || false, ts: ed?.ts || Date.now() };
+    if (ed){
+      const od = erDoc(origMid), idx = od.itens.findIndex(x => x.id === ed.id);
+      if (origMid === mid && idx >= 0) od.itens[idx] = item;
+      else { if (idx >= 0){ od.itens.splice(idx, 1); savePriv("er-" + origMid); } erDoc(mid).itens.push(item); }
+    } else erDoc(mid).itens.push(item);
+    let cut = ajustaLimite("er-" + mid, "itens");
+    savePriv("er-" + mid);
+    if (!ed && $("#eFc").checked){
+      const m = findMat(mid);
+      fcDoc(mid).cards.push({ id: uid(), f: item.enun || ("Erro em " + (topicLabel(mid, item.tid, item.sid) || m?.nome || "")), v: item.lembrar, tid: item.tid, sid: item.sid, criado: today(), deErro: item.id });
+      cut += ajustaLimite("fc-" + mid, "cards");
+      savePriv("fc-" + mid);
+    }
+    if (cut) toast(LIMITE);
+    if (e.submitter && e.submitter.dataset.mais){ openErro({ mid, tid: item.tid, sid: item.sid, data: item.data, banca: item.banca, motivo: item.motivo }); if (!cut) toast("Erro anotado. Pode anotar o próximo."); }
+    else { closeModal(); if (!cut) toast(ed ? "Erro atualizado." : "Erro anotado no caderno."); }
+  };
+  $("#eEnun").focus();
+}
+function openCard(pre, editId){
+  const mats = S.me.materias || [];
+  if (!mats.length){ toast("Cadastre uma matéria antes de criar flashcards."); location.hash = "materias"; return; }
+  pre = { ...(pre || {}) };
+  const origMid = pre.mid || S.ui.lastFcMat || mats[0].id;
+  const ed = editId ? fcDoc(origMid).cards.find(x => x.id === editId) : null;
+  pre.mid = origMid; if (ed){ pre.tid = ed.tid; pre.sid = ed.sid; }
+  $("#modalRoot").innerHTML = `<div class="scrim"><form class="modal wide" id="kForm" novalidate>
+    <h2>${ed ? "Editar flashcard" : "Novo flashcard"}</h2>
+    <div class="field"><label for="kMat">Matéria</label><select id="kMat">${matOptions(origMid, "")}</select></div>
+    <div class="form-grid"><div class="field"><label for="kTop">Tópico</label><select id="kTop"></select></div><div class="field"><label for="kSub">Subtópico</label><select id="kSub"></select></div></div>
+    <div class="field"><label for="kF">Frente (pergunta)</label><textarea id="kF" maxlength="1000" placeholder="Ex.: Quais são os atributos do ato administrativo?">${esc(ed?.f || "")}</textarea></div>
+    <div class="field"><label for="kV">Verso (resposta)</label><textarea id="kV" maxlength="1000" placeholder="Ex.: Presunção de legitimidade, imperatividade, autoexecutoriedade e tipicidade.">${esc(ed?.v || "")}</textarea></div>
+    <div class="err" id="kErr" hidden></div>
+    <div class="actions"><button type="button" class="btn" id="kNo">Cancelar</button>${ed ? "" : `<button type="submit" class="btn" data-mais="1">Salvar e criar outro</button>`}<button class="btn primary" type="submit">Salvar</button></div>
+  </form></div>`;
+  wireTopics(["kMat", "kTop", "kSub"], pre);
+  $("#kNo").onclick = closeModal;
+  $("#kForm").onsubmit = e => {
+    e.preventDefault();
+    const f = $("#kF").value.trim(), v = $("#kV").value.trim(), mid = $("#kMat").value;
+    if (!f){ const er = $("#kErr"); er.textContent = "Escreva a frente do card."; er.hidden = false; return; }
+    const card = { id: ed ? ed.id : uid(), f: f.slice(0, 1000), v: v.slice(0, 1000), tid: $("#kTop").value || null, sid: $("#kSub").value || null, criado: ed?.criado || today() };
+    if (ed?.srs) card.srs = ed.srs;
+    if (ed?.orig) card.orig = ed.orig;
+    if (ed?.deErro) card.deErro = ed.deErro;
+    if (ed){
+      const od = fcDoc(origMid), idx = od.cards.findIndex(x => x.id === ed.id);
+      if (origMid === mid && idx >= 0) od.cards[idx] = card;
+      else { if (idx >= 0){ od.cards.splice(idx, 1); savePriv("fc-" + origMid); } fcDoc(mid).cards.push(card); }
+    } else fcDoc(mid).cards.push(card);
+    const cut = ajustaLimite("fc-" + mid, "cards");
+    S.ui.lastFcMat = mid; savePriv("fc-" + mid);
+    if (cut) toast(LIMITE);
+    if (e.submitter && e.submitter.dataset.mais){ openCard({ mid, tid: card.tid, sid: card.sid }); if (!cut) toast("Card salvo. Crie o próximo."); }
+    else { closeModal(); if (!cut) toast(ed ? "Card atualizado." : "Card criado."); }
+  };
+  $("#kF").focus();
+}
+
+// ---------- telas: flashcards ----------
+function viewFlashcards(){
+  const mats = S.me.materias || [], cards = allCards(), hoje = today(), ui = S.ui;
+  if (!mats.length) return `<div class="stack"><div><p class="label">Memorização</p><h1>Flashcards</h1></div><div class="panel empty"><h3>Cadastre suas matérias primeiro</h3><p>Os flashcards são organizados por matéria e tópico.</p><a class="btn primary" href="#materias">Ir para Matérias</a></div></div>`;
+  const due = cards.filter(c => c.srs && c.srs.due <= hoje).length, novos = cards.filter(c => !c.srs).length, paraHoje = due + Math.min(20, novos);
+  const fcd = S.me.fcDias || {}, ini = addDays(hoje, -29); let n30 = 0, ok30 = 0;
+  Object.entries(fcd).forEach(([k, v]) => { if (k >= ini){ n30 += v.n || 0; ok30 += v.ok || 0; } });
+  const lemb = pct(ok30, n30), dom = cards.filter(c => c.srs && c.srs.iv >= 21).length;
+  const head = `<div class="hello"><div><p class="label">Memorização</p><h1>Flashcards</h1></div><button class="btn" data-act="fcNovo">+ Novo flashcard</button></div>
+    <div class="kpis">
+      <div class="kpi"><span class="label">Para revisar hoje</span><span class="v">${paraHoje}</span><span class="s">${due} revisões · ${Math.min(20, novos)} novos</span><button class="btn primary sm" data-act="fcRevisar" ${paraHoje ? "" : "disabled"} style="align-self:flex-start;margin-top:4px">Revisar agora</button></div>
+      <div class="kpi"><span class="label">Revisados hoje</span><span class="v">${fmtN(fcd[hoje]?.n || 0)}</span><span class="s">${fmtN(n30)} nos últimos 30 dias</span></div>
+      <div class="kpi"><span class="label">Lembrança</span><span class="v">${lemb == null ? "—" : lemb + "%"}</span><span class="s">cards lembrados nos últimos 30 dias</span></div>
+      <div class="kpi"><span class="label">Total de cards</span><span class="v">${fmtN(cards.length)}</span><span class="s">${fmtN(dom)} já fixados (revisão a cada 21+ dias)</span></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Embaralhar</h2><span class="small muted">prática livre em ordem aleatória, sem mexer na agenda de revisões</span></div>
+      <div class="controls" style="align-items:flex-end">
+        <div class="field" style="flex:1;min-width:180px"><label for="fcShufMat">Matéria</label><select id="fcShufMat" data-act="uiSel" data-k="fcShufMat">${matOptions(ui.fcShufMat, "Todas as matérias")}</select></div>
+        <div class="field" style="width:130px"><label for="fcShufN">Quantidade</label><select id="fcShufN" data-act="uiSel" data-k="fcShufN">${[10, 20, 30, 50].map(n => `<option value="${n}" ${String(n) === ui.fcShufN ? "selected" : ""}>${n} cards</option>`).join("")}</select></div>
+        <button class="btn primary" data-act="fcShuffle" ${cards.length ? "" : "disabled"}>Embaralhar e praticar</button>
+      </div></div>
+    ${segHtml("fcView", [["meus", "Meus flashcards"], ["grupo", "Baralhos do grupo"]])}`;
+  return `<div class="stack">${head}${ui.fcView === "grupo" ? viewBaralhos() : viewMeusCards()}</div>`;
+}
+function viewMeusCards(){
+  const mats = S.me.materias || [], hoje = today();
+  const blocks = mats.map(m => {
+    const cs = S.priv["fc-" + m.id]?.cards || [];
+    const due = cs.filter(c => c.srs && c.srs.due <= hoje).length, nv = cs.filter(c => !c.srs).length;
+    const reps = cs.reduce((s, c) => s + (c.srs?.reps || 0), 0), laps = cs.reduce((s, c) => s + (c.srs?.lapses || 0), 0);
+    const lemb = reps ? Math.max(0, Math.round(100 * (1 - laps / reps))) : null, open = S.ui.fcOpen[m.id];
+    const list = open ? `<div class="mat-b">${cs.length ? `<div class="cardlist">${cs.slice().reverse().map(c => `<div class="citem"><div class="f">${esc(c.f)}</div><div class="v muted">${esc(c.v)}</div><div class="cact"><span class="tstat">${c.srs ? "revisão " + (c.srs.due <= hoje ? "hoje" : fmtD(c.srs.due)) : "novo"}</span><button class="btn ghost sm" data-act="fcEdit" data-m="${m.id}" data-id="${c.id}">Editar</button><button class="btn ghost sm" data-act="fcDel" data-m="${m.id}" data-id="${c.id}" aria-label="Apagar card">×</button></div></div>`).join("")}</div>` : `<p class="muted small" style="margin:0">Nenhum card nesta matéria.</p>`}
+      <div class="controls" style="margin-top:12px"><button class="btn sm" data-act="fcNovo" data-m="${m.id}">+ Card nesta matéria</button>${due + nv ? `<button class="btn sm" data-act="fcRevisar" data-m="${m.id}">Revisar esta matéria</button>` : ""}</div></div>` : "";
+    return `<div class="mat"><div class="mat-h" data-act="fcToggle" data-m="${m.id}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}">
+      <div class="name"><span class="swatch" style="background:${m.cor};width:14px;height:14px"></span><h3>${esc(m.nome)}</h3></div>
+      <div class="meta small"><span><b class="num">${cs.length}</b> cards</span><span>${due} para hoje · ${nv} novos</span>${lemb != null ? `<span class="pill ${accClass(lemb)}">${lemb}% lembrança</span>` : ""}<span class="muted" aria-hidden="true">${open ? "▴" : "▾"}</span></div></div>${list}</div>`;
+  }).join("");
+  const bulk = `<form class="panel stack" data-form="bulk" style="gap:10px"><div class="panel-h" style="margin:0"><h2>Criar vários de uma vez</h2></div>
+    <div class="field"><label for="bulkMat">Matéria</label><select id="bulkMat" data-act="uiSel" data-k="bulkMat">${matOptions(S.ui.bulkMat, "")}</select></div>
+    <div class="field"><label for="bulkTxt">Um card por linha, com a frente e o verso separados por uma barra vertical ( | )</label><textarea id="bulkTxt" placeholder="Prazo para impetrar mandado de segurança | 120 dias da ciência do ato&#10;Princípios do art. 37 da CF | Legalidade, impessoalidade, moralidade, publicidade e eficiência (LIMPE)"></textarea></div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Criar cards</button></div></form>`;
+  return `<div class="stack">${blocks}${bulk}</div>`;
+}
+function viewBaralhos(){
+  if (S.mode === "local") return `<div class="notice">Os baralhos do grupo funcionam quando a página é aberta pelo link compartilhado no Claude.</div>`;
+  const ui = S.ui, meC = norm(S.me.concurso), mats = S.me.materias || [];
+  let list = [];
+  Object.entries(S.decks).forEach(([o, ds]) => Object.entries(ds || {}).forEach(([did, d]) => { if (d && d.titulo) list.push({ o, did, d }); }));
+  if (ui.dkGroup === "concurso" && meC) list = list.filter(x => x.d.ckey === meC || x.o === S.uid);
+  list.sort((a, b) => (b.o === S.uid) - (a.o === S.uid) || String(b.d.em || "").localeCompare(String(a.d.em || "")));
+  const cards = list.map(({ o, did, d }) => `<div class="deck"><div class="err-head"><h3>${esc(d.titulo)}</h3>${o === S.uid ? `<span class="pill good">seu</span>` : ""}</div>
+     <div class="small"><span class="swatch" style="background:${esc(d.cor || "#888")}"></span>${esc(d.materia)} · <b class="num">${(d.cards || []).length}</b> cards</div>
+     <div class="small muted">por ${esc(nomeDe(o))}${d.concurso ? " · " + esc(d.concurso) : ""}${d.em ? " · atualizado em " + fmtD(d.em) : ""}</div>
+     <div class="controls" style="margin-top:4px"><button class="btn primary sm" data-act="dkPlay" data-o="${esc(o)}" data-d="${esc(did)}">Praticar embaralhado</button>${o === S.uid ? `<button class="btn sm" data-act="dkSync" data-d="${esc(did)}">Atualizar</button><button class="btn ghost sm danger" data-act="dkDel" data-d="${esc(did)}">Remover</button>` : `<button class="btn sm" data-act="dkCopy" data-o="${esc(o)}" data-d="${esc(did)}">Copiar para meus cards</button>`}</div></div>`).join("");
+  const comCards = mats.filter(m => (S.priv["fc-" + m.id]?.cards || []).length);
+  const share = `<form class="panel stack" data-form="share" style="gap:10px"><div class="panel-h" style="margin:0"><h2>Compartilhar um baralho</h2><span class="small muted">o grupo vê a frente e o verso dos cards; seu progresso continua só seu</span></div>
+     ${comCards.length ? `<div class="form-grid"><div class="field"><label for="dkMat">Matéria</label><select id="dkMat">${comCards.map(m => `<option value="${m.id}">${esc(m.nome)} (${S.priv["fc-" + m.id].cards.length} cards)</option>`).join("")}</select></div>
+     <div class="field"><label for="dkTit">Nome do baralho (opcional)</label><input type="text" id="dkTit" maxlength="80" placeholder="Ex.: Prazos da Lei 8.112"></div></div>
+     <p class="small muted" style="margin:0">Compartilhar de novo a mesma matéria atualiza o baralho que já existe. Até 400 cards por baralho.</p>
+     <div style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Compartilhar</button></div>` : `<p class="muted" style="margin:0">Crie flashcards em alguma matéria para poder compartilhá-los.</p>`}</form>`;
+  return `<div class="stack"><div class="controls">${segHtml("dkGroup", [["concurso", "Meu concurso"], ["todos", "Todos"]])}${meC ? "" : `<span class="small muted">Informe seu concurso no Perfil para filtrar.</span>`}</div>
+    ${cards ? `<div class="decks">${cards}</div>` : `<div class="panel empty"><h3>Nenhum baralho compartilhado ainda</h3><p>Compartilhe os seus abaixo. Quando colegas fizerem o mesmo, os baralhos deles aparecem aqui.</p></div>`}${share}</div>`;
+}
+
+// ---------- tela: caderno de erros ----------
+function viewErros(){
+  const mats = S.me.materias || [], ui = S.ui, all = allErros();
+  const head = `<div class="hello"><div><p class="label">Revisão</p><h1>Caderno de erros</h1></div><div class="controls"><button class="btn" data-act="erRevisar" ${all.some(e => !e.sup) ? "" : "disabled"}>Revisar pendentes</button><button class="btn primary" data-act="erNovo">+ Anotar erro</button></div></div>`;
+  if (!mats.length) return `<div class="stack"><div><p class="label">Revisão</p><h1>Caderno de erros</h1></div><div class="panel empty"><h3>Cadastre suas matérias primeiro</h3><p>Os erros são organizados por matéria e tópico.</p><a class="btn primary" href="#materias">Ir para Matérias</a></div></div>`;
+  if (!all.length) return `<div class="stack">${head}<div class="panel empty"><h3>Seu caderno está vazio</h3><p>Anote cada questão que errar: o que foi cobrado, por que errou e o que precisa lembrar. Ao registrar questões com erros, a plataforma oferece abrir o caderno.</p><button class="btn primary" data-act="erNovo">Anotar o primeiro erro</button></div></div>`;
+  const pend = all.filter(e => !e.sup), revs = all.reduce((s, e) => s + (e.revs || 0), 0);
+  const porMot = {}; pend.forEach(e => { porMot[e.motivo] = (porMot[e.motivo] || 0) + 1; });
+  const motRows = Object.entries(MOTIVOS).map(([k, l]) => [k, l, porMot[k] || 0]).filter(r => r[2]).sort((a, b) => b[2] - a[2]);
+  const maxM = Math.max(1, ...motRows.map(r => r[2]));
+  const porMat = mats.map(m => [m, pend.filter(e => e.mid === m.id).length]).filter(r => r[1]).sort((a, b) => b[1] - a[1]);
+  const maxT = Math.max(1, ...porMat.map(r => r[1]));
+  const lista = all.filter(e => (!ui.erMat || e.mid === ui.erMat) && (!ui.erMot || e.motivo === ui.erMot) && (ui.erSt === "todos" || (ui.erSt === "sup" ? e.sup : !e.sup)))
+    .sort((a, b) => String(b.data).localeCompare(String(a.data)) || (b.ts || 0) - (a.ts || 0));
+  const itens = lista.slice(0, 200).map(e => {
+    const m = findMat(e.mid), tl = e.tid ? topicLabel(e.mid, e.tid, e.sid) : "";
+    return `<div class="err-item ${e.sup ? "sup" : ""}" style="--c:${m?.cor || "var(--muted)"}">
+     <div class="err-head"><div class="small"><b>${esc(m?.nome || "")}</b>${tl ? " · " + esc(tl) : ""} <span class="muted">· ${fmtD(e.data)}${e.banca ? " · " + esc(e.banca) : ""}</span></div><div class="controls"><span class="pill">${esc(MOTIVOS[e.motivo] || "")}</span>${e.sup ? `<span class="pill good">superado</span>` : ""}</div></div>
+     ${e.enun ? `<div class="txt">${esc(e.enun)}</div>` : ""}
+     ${e.lembrar ? `<div class="lembrar"><div class="label">Lembrar</div><div class="pw">${esc(e.lembrar)}</div></div>` : ""}
+     <div class="controls small"><span class="muted" style="flex:1;min-width:140px">${e.revs ? `${e.revs} ${e.revs > 1 ? "revisões" : "revisão"}, a última em ${fmtD(e.ultRev)}` : "ainda não revisado"}</span>
+       <button class="btn sm" data-act="erRev" data-m="${e.mid}" data-id="${e.id}">Revisei</button>
+       <button class="btn sm" data-act="erSup" data-m="${e.mid}" data-id="${e.id}">${e.sup ? "Reabrir" : "Marcar superado"}</button>
+       <button class="btn ghost sm" data-act="erFc" data-m="${e.mid}" data-id="${e.id}">Virar flashcard</button>
+       <button class="btn ghost sm" data-act="erEdit" data-m="${e.mid}" data-id="${e.id}">Editar</button>
+       <button class="btn ghost sm danger" data-act="erDel" data-m="${e.mid}" data-id="${e.id}">Apagar</button></div></div>`;
+  }).join("");
+  return `<div class="stack">${head}
+    <div class="kpis">
+      <div class="kpi"><span class="label">Erros anotados</span><span class="v">${fmtN(all.length)}</span><span class="s">em ${new Set(all.map(e => e.mid)).size} matéria(s)</span></div>
+      <div class="kpi"><span class="label">Pendentes</span><span class="v">${fmtN(pend.length)}</span><span class="s">ainda precisam de revisão</span></div>
+      <div class="kpi"><span class="label">Superados</span><span class="v">${fmtN(all.length - pend.length)}</span><span class="s">${Math.round(100 * (all.length - pend.length) / all.length)}% do caderno</span></div>
+      <div class="kpi"><span class="label">Revisões feitas</span><span class="v">${fmtN(revs)}</span><span class="s">releituras do caderno</span></div>
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="panel-h"><h2>Por que você erra</h2><span class="small muted">erros pendentes</span></div>
+        ${motRows.length ? `<div class="hbars">${motRows.map(([k, l, n]) => `<div class="hbar"><span>${esc(l)}</span><div class="bar"><i style="width:${Math.round(100 * n / maxM)}%;background:var(--bad)"></i></div><span class="num n">${n}</span></div>`).join("")}</div>
+        <p class="small" style="margin:14px 0 0"><b>Dica para o motivo mais comum:</b> ${esc(DICAS[motRows[0][0]])}</p>` : `<p class="muted">Nenhum erro pendente.</p>`}</div>
+      <div class="panel"><div class="panel-h"><h2>Por matéria</h2><span class="small muted">erros pendentes</span></div>
+        ${porMat.length ? `<div class="hbars">${porMat.map(([m, n]) => `<div class="hbar"><span><span class="swatch" style="background:${m.cor}"></span>${esc(m.nome)}</span><div class="bar"><i style="width:${Math.round(100 * n / maxT)}%;background:${m.cor}"></i></div><span class="num n">${n}</span></div>`).join("")}</div>` : `<p class="muted">Nenhum erro pendente.</p>`}</div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Erros</h2><span class="small muted">${lista.length} de ${all.length}</span></div>
+      <div class="controls" style="margin-bottom:14px">
+        <select id="erMat" data-act="uiSel" data-k="erMat" style="width:auto;max-width:100%" aria-label="Filtrar por matéria">${matOptions(ui.erMat, "Todas as matérias")}</select>
+        <select id="erMot" data-act="uiSel" data-k="erMot" style="width:auto;max-width:100%" aria-label="Filtrar por motivo"><option value="">Todos os motivos</option>${Object.entries(MOTIVOS).map(([k, l]) => `<option value="${k}" ${ui.erMot === k ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${segHtml("erSt", [["pend", "Pendentes"], ["sup", "Superados"], ["todos", "Todos"]])}
+      </div>
+      ${itens ? `<div class="stack" style="gap:10px">${itens}</div>` : `<p class="muted">Nenhum erro com esses filtros.</p>`}
+    </div></div>`;
+}
+
+// ---------- curvas: dados ----------
+function weekKey(k){ const d = parseD(k); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return dkey(d); }
+function weeksBack(n){ const out = [], w0 = weekKey(today()); for (let i = n - 1; i >= 0; i--) out.push(addDays(w0, -7 * i)); return out; }
+function qaSem(sem, wk, key){
+  const o = (sem || {})[wk] || {};
+  if (key) return o[key] || [0, 0];
+  let q = 0, a = 0; Object.values(o).forEach(p => { q += p[0] || 0; a += p[1] || 0; }); return [q, a];
+}
+function curva(sem, key, movel){
+  const ws = weeksBack(15), pts = ws.map(w => qaSem(sem, w, key));
+  return ws.slice(3).map((w, j) => {
+    const i = j + 3; let q = 0, a = 0;
+    for (let k = movel ? i - 3 : i; k <= i; k++){ q += pts[k][0]; a += pts[k][1]; }
+    return { w, q, a, r: q ? 100 * a / q : null };
+  });
+}
+function soma(c, ini, fim){ return c.slice(ini, fim).reduce((o, p) => [o[0] + p.q, o[1] + p.a], [0, 0]); }
+function curvaFC(fcDias){
+  const by = {};
+  Object.entries(fcDias || {}).forEach(([k, v]) => { const w = weekKey(k), b = by[w] || (by[w] = { n: 0, ok: 0 }); b.n += v.n || 0; b.ok += v.ok || 0; });
+  return weeksBack(12).map(w => { const b = by[w] || { n: 0, ok: 0 }; return { w, n: b.n, ok: b.ok, r: b.n ? 100 * b.ok / b.n : null }; });
+}
+function colegas(){
+  const meC = norm(S.me.concurso);
+  return Object.keys(S.all).filter(id => id !== S.uid && S.all[id] && S.all[id].stats && (!meC || norm(S.all[id].concurso) === meC));
+}
+const media = xs => xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
+function frescor(){
+  const det = localDetail(), hoje = today(), tot = { f7: 0, f30: 0, fold: 0, nunca: 0 }, por = [];
+  (S.me.materias || []).forEach(m => {
+    const c = { f7: 0, f30: 0, fold: 0, nunca: 0 };
+    leaves(m).forEach(l => {
+      if (l.vazio) return;
+      const d = [det.last[leafKey(l.mid, l.tid, l.sid)], l.sid ? det.last[leafKey(l.mid, l.tid, null)] : null].filter(Boolean).sort().pop();
+      let k;
+      if (d){ const dd = diffDays(d, hoje); k = dd <= 7 ? "f7" : dd <= 30 ? "f30" : "fold"; }
+      else k = l.status >= 1 ? "fold" : "nunca";
+      c[k]++; tot[k]++;
+    });
+    por.push([m, c]);
+  });
+  return { tot, por };
+}
+const TONS = ["var(--s1)", "color-mix(in srgb,var(--s1) 55%,var(--surface))", "color-mix(in srgb,var(--s1) 30%,var(--surface))", "repeating-linear-gradient(135deg,var(--chip) 0 4px,var(--line) 4px 6px)"];
+const LEG_TOP = [["f7", "Estudado há até 7 dias"], ["f30", "Há 8 a 30 dias"], ["fold", "Há mais de 30 dias"], ["nunca", "Nunca estudado"]];
+const LEG_FC = [["ok", "Em dia (próxima revisão em 8+ dias)"], ["breve", "Revisão nos próximos 7 dias"], ["venc", "Revisão vencida"], ["novo", "Nunca revisado"]];
+function stackBar(c, leg, label){
+  const tot = leg.reduce((s, [k]) => s + (c[k] || 0), 0);
+  if (!tot) return `<div class="stack-bar empty-bar" role="img" aria-label="${esc(label)}: sem itens"></div>`;
+  return `<div class="stack-bar" role="img" aria-label="${esc(label)}: ${leg.map(([k, l]) => `${l} ${c[k] || 0}`).join(", ")}">${leg.map(([k, l], i) => c[k] ? `<i style="flex:${c[k]};background:${TONS[i]}" title="${esc(l)}: ${c[k]} (${Math.round(100 * c[k] / tot)}%)"></i>` : "").join("")}</div>`;
+}
+function legenda(leg, c){ return `<div class="legend">${leg.map(([k, l], i) => `<span class="lgi"><i class="sw" style="background:${TONS[i]}"></i>${esc(l)}${c ? ` <b class="num">${c[k] || 0}</b>` : ""}</span>`).join("")}</div>`; }
+
+// ---------- curvas: gráfico de linhas com hover ----------
+function drawCharts(){ (S.charts || []).forEach(c => { const el = document.getElementById(c.id); if (el) drawLine(el, c.cfg); }); }
+let rzT = null;
+window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(drawCharts, 150); });
+function drawLine(el, cfg){
+  const W = Math.max(260, Math.floor(el.clientWidth || 600)), H = cfg.h || 240;
+  const m = { l: 40, r: 46, t: 12, b: 28 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = cfg.x.length, yMax = 100;
+  const X = i => m.l + (n === 1 ? iw / 2 : i * iw / (n - 1));
+  const Y = v => m.t + ih * (1 - Math.max(0, Math.min(yMax, v)) / yMax);
+  let g = "";
+  if (cfg.band) g += `<rect x="${m.l}" y="${Y(cfg.band[1])}" width="${iw}" height="${Y(cfg.band[0]) - Y(cfg.band[1])}" style="fill:var(--accent-soft)"/><text x="${m.l + 6}" y="${Y(cfg.band[1]) - 4}" class="ct">${esc(cfg.bandLabel || "")}</text>`;
+  [0, 25, 50, 75, 100].forEach(t => { g += `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="${m.l - 6}" y="${Y(t) + 4}" text-anchor="end" class="ct">${t}%</text>`; });
+  const step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor(iw / 62))));
+  cfg.x.forEach((lab, i) => { if ((n - 1 - i) % step === 0) g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" class="ct">${esc(lab)}</text>`; });
+  if (cfg.marks) cfg.marks.forEach(i => { g += `<line x1="${X(i)}" x2="${X(i)}" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--line)" stroke-dasharray="2 3"/>`; });
+  const ends = [];
+  cfg.series.forEach(s => {
+    let d = "", pen = false;
+    s.v.forEach((v, i) => { if (v == null){ pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); pen = true; });
+    if (d) g += `<path d="${d}" fill="none" style="stroke:${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ' stroke-dasharray="6 4"' : ""}/>`;
+    s.v.forEach((v, i) => {
+      if (v == null) return;
+      const solo = (s.v[i - 1] == null) && (s.v[i + 1] == null);
+      if (s.dots !== false || solo) g += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4" style="fill:${s.color};stroke:var(--surface)" stroke-width="2"/>`;
+    });
+    let li = -1; s.v.forEach((v, i) => { if (v != null) li = i; });
+    if (li >= 0) ends.push({ x: X(li), y: Y(s.v[li]), txt: Math.round(s.v[li]) + "%" });
+  });
+  ends.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 14) ends[i].y = ends[i - 1].y + 14;
+  ends.forEach(e => { g += `<text x="${(e.x + 8).toFixed(1)}" y="${(e.y + 4).toFixed(1)}" class="ct cv">${e.txt}</text>`; });
+  g += `<line class="cross" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" style="stroke:var(--muted)" stroke-width="1" visibility="hidden"/>`;
+  g += `<rect x="${m.l - 12}" y="0" width="${iw + 24}" height="${H}" fill="transparent"/>`;
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(cfg.label)}">${g}</svg><div class="tip" hidden></div>`;
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip"), cross = el.querySelector(".cross");
+  const hide = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); };
+  const move = ev => {
+    const r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(n - 1, Math.round(n === 1 ? 0 : (x - m.l) * (n - 1) / iw)));
+    const html = cfg.tip(i); if (!html) return hide();
+    cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("visibility", "visible");
+    tip.innerHTML = html; tip.hidden = false;
+    const px = X(i) * r.width / W, tw = tip.offsetWidth;
+    tip.style.left = Math.max(0, px + 14 + tw > r.width ? px - tw - 14 : px + 14) + "px";
+  };
+  svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", hide);
+}
+function curvaIlustr(){
+  const revs = [1, 7, 30], est = [1.2, 4, 12, 40], sem = [], com = [];
+  for (let t = 0; t <= 35; t++){
+    sem.push(20 + 80 * Math.exp(-t / est[0]));
+    let ult = 0, k = 0; revs.forEach((r, j) => { if (t >= r){ ult = r; k = j + 1; } });
+    const piso = 20 + 15 * k; com.push(piso + (100 - piso) * Math.exp(-(t - ult) / est[k]));
+  }
+  return { sem, com, revs };
+}
+
+// ---------- tela: evolução ----------
+function viewEvolucao(){
+  S.charts = [];
+  const ui = S.ui, mats = S.me.materias || [];
+  if (!mats.length) return `<div class="stack"><div><p class="label">Evolução</p><h1>Curvas de aprendizado</h1></div><div class="panel empty"><h3>Cadastre suas matérias primeiro</h3><p>As curvas são calculadas a partir das questões e revisões registradas em cada matéria.</p><a class="btn primary" href="#materias">Ir para Matérias</a></div></div>`;
+  const st = computeStats(), mySem = st.sem || {}, cols = colegas(), movel = ui.evModo === "movel";
+  const selM = ui.evMat ? findMat(ui.evMat) : null, key = selM ? norm(selM.nome) : "";
+  const meu = curva(mySem, key, movel);
+  const colC = cols.map(id => curva(S.all[id].stats.sem, key, movel));
+  const grp = meu.map((_, i) => { const rs = colC.map(c => c[i]).filter(p => p.q >= 5).map(p => p.r); return { r: media(rs), n: rs.length }; });
+  const temMeu = meu.some(p => p.r != null), temGrp = grp.some(p => p.r != null);
+  const xl = meu.map(p => fmtD(p.w));
+  const nomeCol = cols.length ? "Colegas (média)" : "Colegas";
+  if (temMeu || temGrp) S.charts.push({ id: "chAprend", cfg: {
+    label: "Curva de aprendizado: taxa de acerto por semana", x: xl, band: [70, 80], bandLabel: "meta 70–80%",
+    series: [{ name: "Você", color: "var(--s1)", v: meu.map(p => p.r) }, { name: nomeCol, color: "var(--s2)", dash: true, v: grp.map(p => p.r) }],
+    tip: i => { const p = meu[i], gp = grp[i]; return `<b>Semana de ${fmtD(p.w)}${movel ? " (4 semanas)" : ""}</b><br><i class="sw" style="background:var(--s1)"></i>Você: ${p.r == null ? "sem questões" : Math.round(p.r) + "% · " + p.a + "/" + p.q}<br><i class="sw dash" style="background:var(--s2)"></i>Colegas: ${gp.r == null ? "sem dados" : Math.round(gp.r) + "% · média de " + gp.n}`; }
+  } });
+
+  // tendência e comparação por matéria (últimas 4 semanas x 4 anteriores)
+  const estag = [];
+  const linhas = mats.map(m => {
+    const k = norm(m.nome), c = curva(mySem, k, false);
+    const [q2, a2] = soma(c, 8, 12), [q1, a1] = soma(c, 4, 8);
+    const r2 = q2 >= 10 ? 100 * a2 / q2 : null, r1 = q1 >= 10 ? 100 * a1 / q1 : null;
+    let tend;
+    if (r2 == null) tend = `<span class="muted small">poucas questões</span>`;
+    else if (r1 == null) tend = `<span class="muted small">começando</span>`;
+    else { const d = r2 - r1; tend = d >= 5 ? `<span class="pill good">↑ subindo ${Math.round(d)} pts</span>` : d <= -5 ? `<span class="pill bad">↓ caindo ${Math.round(-d)} pts</span>` : `<span class="pill">→ estável</span>`; if (Math.abs(d) < 5 && r2 < 70) estag.push(m.nome); }
+    const crs = cols.map(id => { const [q, a] = soma(curva(S.all[id].stats.sem, k, false), 8, 12); return q >= 10 ? 100 * a / q : null; }).filter(x => x != null);
+    const gm = media(crs), pos = r2 != null ? [r2, ...crs].sort((a, b) => b - a).indexOf(r2) + 1 : null;
+    const dif = r2 != null && gm != null ? Math.round(r2 - gm) : null;
+    return `<tr><td><span class="swatch" style="background:${m.cor}"></span>${esc(m.nome)}</td>
+      <td class="r">${r2 == null ? '<span class="muted">—</span>' : `<span class="pill ${accClass(r2)}">${Math.round(r2)}%</span> <span class="small muted num">${q2} q.</span>`}</td>
+      <td class="r">${r1 == null ? '<span class="muted">—</span>' : `<span class="num">${Math.round(r1)}%</span>`}</td>
+      <td>${tend}</td>
+      <td class="r">${gm == null ? '<span class="muted">—</span>' : `<span class="num">${Math.round(gm)}%</span> <span class="small muted">(${crs.length})</span>`}</td>
+      <td class="r num">${dif == null ? '<span class="muted">—</span>' : (dif > 0 ? "+" : "") + dif + " pts"}</td>
+      <td class="r num">${pos == null || !crs.length ? '<span class="muted">—</span>' : pos + "º de " + (crs.length + 1)}</td></tr>`;
+  }).join("");
+
+  // retenção dos flashcards
+  const fcMeu = curvaFC(S.me.fcDias), fcCol = cols.map(id => curvaFC(S.all[id].fcDias));
+  const fcGrp = fcMeu.map((_, i) => { const rs = fcCol.map(c => c[i]).filter(p => p.n >= 10).map(p => p.r); return { r: media(rs), n: rs.length }; });
+  const temFC = fcMeu.some(p => p.r != null) || fcGrp.some(p => p.r != null);
+  if (temFC) S.charts.push({ id: "chRet", cfg: {
+    label: "Curva de retenção: porcentagem de flashcards lembrados por semana", x: fcMeu.map(p => fmtD(p.w)), band: [80, 90], bandLabel: "faixa saudável 80–90%",
+    series: [{ name: "Você", color: "var(--s1)", v: fcMeu.map(p => p.r) }, { name: nomeCol, color: "var(--s2)", dash: true, v: fcGrp.map(p => p.r) }],
+    tip: i => { const p = fcMeu[i], gp = fcGrp[i]; return `<b>Semana de ${fmtD(p.w)}</b><br><i class="sw" style="background:var(--s1)"></i>Você: ${p.r == null ? "sem revisões" : Math.round(p.r) + "% · " + p.ok + "/" + p.n + " cards"}<br><i class="sw dash" style="background:var(--s2)"></i>Colegas: ${gp.r == null ? "sem dados" : Math.round(gp.r) + "% · média de " + gp.n}`; }
+  } });
+
+  // frescor do conteúdo e dos cards
+  const fr = frescor(), hoje = today(), em7 = addDays(hoje, 7), fcC = { ok: 0, breve: 0, venc: 0, novo: 0 };
+  allCards().forEach(c => { if (!c.srs) fcC.novo++; else if (c.srs.due <= hoje) fcC.venc++; else if (c.srs.due <= em7) fcC.breve++; else fcC.ok++; });
+  const totTop = fr.tot.f7 + fr.tot.f30 + fr.tot.fold + fr.tot.nunca, fresco = totTop ? Math.round(100 * fr.tot.f7 / totTop) : 0;
+  const frRows = fr.por.map(([m, c]) => `<div class="frow"><span class="fname"><span class="swatch" style="background:${m.cor}"></span>${esc(m.nome)}</span>${stackBar(c, LEG_TOP, m.nome)}<span class="small muted num">${c.f7 + c.f30}/${c.f7 + c.f30 + c.fold + c.nunca}</span></div>`).join("");
+
+  // curva do esquecimento (ilustração)
+  const il = curvaIlustr();
+  S.charts.push({ id: "chEsq", cfg: {
+    label: "Curva do esquecimento: memória sem revisão e com revisões em 1, 7 e 30 dias (ilustração)", h: 220, x: il.sem.map((_, t) => "dia " + t), marks: il.revs,
+    series: [{ name: "Com revisões", color: "var(--s1)", dots: false, v: il.com }, { name: "Sem revisão", color: "var(--s2)", dash: true, dots: false, v: il.sem }],
+    tip: t => `<b>Dia ${t}${il.revs.includes(t) ? " · revisão" : ""}</b><br><i class="sw" style="background:var(--s1)"></i>Com revisões: ${Math.round(il.com[t])}%<br><i class="sw dash" style="background:var(--s2)"></i>Sem revisão: ${Math.round(il.sem[t])}%`
+  } });
+
+  const lg2 = n1 => `<div class="legend"><span class="lgi"><i class="ln" style="background:var(--s1)"></i>${n1 || "Você"}</span><span class="lgi"><i class="ln dash" style="--c:var(--s2)"></i>${n1 ? "Sem revisão" : nomeCol}</span></div>`;
+  const tabela = (rows, cab) => `<details class="tdata"><summary>Ver os dados em tabela</summary><div class="tw"><table><thead><tr>${cab.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div></details>`;
+  const tabAprend = tabela(meu.map((p, i) => `<tr><td>${fmtD(p.w)}</td><td class="r num">${p.r == null ? "—" : Math.round(p.r) + "%"}</td><td class="r num">${p.q}</td><td class="r num">${grp[i].r == null ? "—" : Math.round(grp[i].r) + "%"}</td></tr>`).join(""), ["Semana", "Seu acerto", "Questões", "Colegas"]);
+  const tabRet = tabela(fcMeu.map((p, i) => `<tr><td>${fmtD(p.w)}</td><td class="r num">${p.r == null ? "—" : Math.round(p.r) + "%"}</td><td class="r num">${p.n}</td><td class="r num">${fcGrp[i].r == null ? "—" : Math.round(fcGrp[i].r) + "%"}</td></tr>`).join(""), ["Semana", "Sua lembrança", "Cards", "Colegas"]);
+
+  return `<div class="stack">
+    <div><p class="label">Evolução</p><h1>Curvas de aprendizado</h1><p class="muted" style="margin:6px 0 0;max-width:68ch">Acompanhe se cada matéria está subindo, estagnada ou caindo, quanto do conteúdo ainda está fresco na memória e como você se compara aos colegas${S.me.concurso ? " de " + esc(S.me.concurso) : ""}.</p></div>
+
+    <div class="panel"><div class="panel-h"><h2>Curva de aprendizado</h2><span class="small muted">taxa de acerto nas últimas 12 semanas</span></div>
+      <div class="controls" style="margin-bottom:12px">
+        <select id="evMat" data-act="uiSel" data-k="evMat" style="width:auto;max-width:100%" aria-label="Matéria">${matOptions(ui.evMat, "Todas as matérias")}</select>
+        ${segHtml("evModo", [["semana", "Por semana"], ["movel", "Média de 4 semanas"]])}
+      </div>
+      ${temMeu || temGrp ? `${lg2()}<div class="chart" id="chAprend"></div>${tabAprend}` : `<div class="empty"><h3>Ainda sem questões ${selM ? "nesta matéria " : ""}nas últimas 12 semanas</h3><p>Registre suas baterias de questões com acertos para a curva aparecer.</p><button class="btn primary" data-act="registrar">Registrar questões</button></div>`}
+      <p class="small muted" style="margin:10px 0 0">A faixa verde marca 70–80% de acerto, patamar comum de aprovação. “Média de 4 semanas” suaviza oscilações de semanas com poucas questões.</p>
+    </div>
+
+    <div class="panel"><div class="panel-h"><h2>Tendência e comparação por matéria</h2><span class="small muted">últimas 4 semanas x 4 anteriores · mínimo de 10 questões</span></div>
+      <div class="tw"><table><thead><tr><th>Matéria</th><th class="r">Últimas 4 sem.</th><th class="r">4 anteriores</th><th>Tendência</th><th class="r">Colegas</th><th class="r">Você x colegas</th><th class="r">Sua posição</th></tr></thead><tbody>${linhas}</tbody></table></div>
+      ${estag.length ? `<p class="small" style="margin:12px 0 0"><b>Estagnadas abaixo de 70%:</b> ${estag.map(esc).join(", ")}. Quando a curva para de subir, costuma ajudar voltar à teoria dos tópicos com mais erros, revisar o caderno de erros ou mudar a fonte de questões.</p>` : ""}
+      ${cols.length ? "" : `<p class="small muted" style="margin:12px 0 0">A comparação aparece quando colegas do mesmo concurso registrarem questões.</p>`}
+    </div>
+
+    <div class="grid2">
+      <div class="panel"><div class="panel-h"><h2>Curva de retenção</h2><span class="small muted">flashcards lembrados por semana</span></div>
+        ${temFC ? `${lg2()}<div class="chart" id="chRet"></div>${tabRet}` : `<p class="muted">Revise flashcards por algumas semanas para ver quanto você está retendo.</p><a class="btn" href="#flashcards">Ir para Flashcards</a>`}
+        <p class="small muted" style="margin:10px 0 0">Lembrança entre 80% e 90% indica revisões no ritmo certo. Muito abaixo disso, os intervalos estão longos demais para você; perto de 100%, talvez esteja revisando cedo demais.</p>
+      </div>
+      <div class="panel"><div class="panel-h"><h2>Curva do esquecimento</h2><span class="small muted">ilustração</span></div>
+        ${lg2("Com revisões em 1, 7 e 30 dias")}<div class="chart" id="chEsq"></div>
+        <p class="small muted" style="margin:10px 0 0">Sem revisão, a maior parte de um conteúdo novo se perde em poucos dias. Cada revisão devolve a memória ao topo e faz a queda seguinte ser mais lenta. É o que o cronograma e os flashcards fazem por você.</p>
+      </div>
+    </div>
+
+    <div class="panel"><div class="panel-h"><h2>O que ainda está fresco</h2><span class="small muted">${fresco}% dos tópicos estudados na última semana</span></div>
+      ${legenda(LEG_TOP, fr.tot)}
+      <div class="frows">${frRows}</div>
+      <div class="frow" style="margin-top:14px"><span class="fname"><b>Flashcards</b></span>${stackBar(fcC, LEG_FC, "Flashcards")}<span class="small muted num">${fcC.ok + fcC.breve}/${fcC.ok + fcC.breve + fcC.venc + fcC.novo}</span></div>
+      ${legenda(LEG_FC, fcC)}
+      <p class="small muted" style="margin:10px 0 0">Tópicos estudados há mais de 30 dias e cards vencidos são os que a curva do esquecimento já está apagando: priorize-os nas revisões.</p>
+    </div>
+  </div>`;
+}
+
+// ---------- modelos de matérias para concursos ----------
+const MODELO = [
+  { nome:"Língua Portuguesa", peso:5, t:["Interpretação de textos","Ortografia e acentuação","Classes de palavras","Sintaxe: termos da oração","Concordância verbal e nominal","Regência e crase","Pontuação","Colocação pronominal"] },
+  { nome:"Raciocínio Lógico", peso:3, t:["Proposições e conectivos","Equivalências e negações","Análise combinatória","Probabilidade","Porcentagem e razão"] },
+  { nome:"Direito Constitucional", peso:4, t:["Princípios fundamentais","Direitos e garantias fundamentais","Organização do Estado","Administração Pública (art. 37 a 41)","Poderes da República"] },
+  { nome:"Direito Administrativo", peso:4, t:["Princípios da Administração","Atos administrativos","Poderes administrativos","Licitações (Lei 14.133/2021)","Agentes públicos","Improbidade administrativa"] },
+  { nome:"Informática", peso:2, t:["Sistemas operacionais","Editores de texto e planilhas","Redes e internet","Segurança da informação"] }
+];
+
+// ---------- inicialização ----------
+// ---------- Supabase: conexão, login e gravação ----------
+const SB_URL = "https://mqytfvadkepzbshvutnc.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xeXRmdmFka2VwemJzaHZ1dG5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyNzc2OTIsImV4cCI6MjEwODg1MzY5Mn0.9NEW5hxgOjReFLHpeHj-hnJsPPVSB6IsfO6gEBJywB8";
+async function boot(){
+  window.addEventListener("hashchange", () => { setTab(location.hash.slice(1)); });
+  setTab(location.hash.slice(1) || "painel", true);
+  if (!window.supabase || !window.supabase.createClient){
+    $("#view").innerHTML = `<div class="empty"><h3>Não foi possível carregar a plataforma</h3><p>Verifique sua conexão com a internet e recarregue a página.</p></div>`; return;
+  }
+  S.sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  S.sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === "SIGNED_OUT"){ location.reload(); return; }
+    if (session && session.user && S.uid !== session.user.id) setTimeout(() => startSupa(session.user), 0);
+  });
+  let sess = null;
+  try { const { data } = await S.sb.auth.getSession(); sess = data && data.session; } catch(e){ sess = null; }
+  if (sess && sess.user){ if (S.uid !== sess.user.id) startSupa(sess.user); }
+  else renderAuth("entrar");
+}
+function traduzAuth(e){
+  const m = (e && e.message) || "";
+  if (/invalid login/i.test(m)) return "E-mail ou senha incorretos.";
+  if (/already (been )?registered/i.test(m)) return "Este e-mail já tem conta. Use a opção Entrar.";
+  if (/not confirmed/i.test(m)) return "Confirme seu e-mail pelo link que enviamos antes de entrar.";
+  if (/rate limit|too many/i.test(m)) return "Muitas tentativas seguidas. Espere alguns minutos e tente de novo.";
+  if (/password/i.test(m)) return "Senha inválida: use pelo menos 6 caracteres.";
+  if (/fetch|network/i.test(m)) return "Sem conexão com o servidor. Verifique a internet e tente de novo.";
+  return "Não foi possível concluir: " + m;
+}
+function renderAuth(modo, msg, ok){
+  S.authModo = modo || S.authModo || "entrar";
+  $("#tabs").hidden = true; $("#btnReg").hidden = true;
+  const m = S.authModo, ent = m === "entrar";
+  $("#view").innerHTML = `<div class="auth">
+    <section class="auth-pitch">
+      <p class="label">Plataforma de estudos para concursos</p>
+      <h1>Estude com método. Veja sua evolução. Cresça com o grupo.</h1>
+      <ul class="feat">
+        <li><b>Painel por matéria</b><span>nível, horas, questões e taxa de acerto, até o subtópico do edital</span></li>
+        <li><b>Cronograma personalizado</b><span>montado pelo seu desempenho, com revisões em 1, 7 e 30 dias</span></li>
+        <li><b>Flashcards e caderno de erros</b><span>repetição espaçada e o registro do porquê de cada erro</span></li>
+        <li><b>Curvas e ranking do grupo</b><span>quem estuda mais, quem acerta mais e quem pode ajudar em cada matéria</span></li>
+      </ul>
+    </section>
+    <form class="panel stack auth-form" id="fAuth" novalidate>
+      <div class="seg" role="group" aria-label="Entrar ou criar conta"><button type="button" class="${ent ? "on" : ""}" data-auth="entrar">Entrar</button><button type="button" class="${ent ? "" : "on"}" data-auth="criar">Criar conta</button></div>
+      <h2>${ent ? "Entrar na plataforma" : "Criar sua conta"}</h2>
+      <div class="field"><label for="aEmail">E-mail</label><input type="email" id="aEmail" autocomplete="email" required></div>
+      <div class="field"><label for="aSenha">Senha</label><input type="password" id="aSenha" autocomplete="${ent ? "current-password" : "new-password"}" minlength="6" required>${ent ? "" : `<span class="small muted">Mínimo de 6 caracteres.</span>`}</div>
+      <div class="${ok ? "okmsg" : "err"}" id="aMsg" ${msg ? "" : "hidden"}>${esc(msg || "")}</div>
+      <button class="btn primary" type="submit" id="aBtn">${ent ? "Entrar" : "Criar conta e começar"}</button>
+      <p class="small muted" style="margin:0">${ent ? "Ainda não tem conta? Clique em Criar conta; leva menos de um minuto." : "Depois de criar a conta, você escolhe seu concurso e monta suas matérias."} Esqueceu a senha? Fale com o organizador do grupo.</p>
+    </form></div>`;
+}
+async function entrar(){
+  const email = $("#aEmail").value.trim(), senha = $("#aSenha").value, modo = S.authModo;
+  const msg = (t, ok) => { const el = $("#aMsg"); el.textContent = t; el.className = ok ? "okmsg" : "err"; el.hidden = false; };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return msg("Digite um e-mail válido.");
+  if (senha.length < 6) return msg("A senha precisa ter pelo menos 6 caracteres.");
+  const btn = $("#aBtn"), rot = btn.textContent; btn.disabled = true; btn.textContent = modo === "entrar" ? "Entrando…" : "Criando conta…";
+  try {
+    if (modo === "criar"){
+      const { data, error } = await S.sb.auth.signUp({ email, password: senha, options: { emailRedirectTo: location.origin + location.pathname } });
+      if (error) throw error;
+      if (!data.session) msg("Conta criada. Abra o link de confirmação enviado ao seu e-mail e depois entre aqui.", true);
+    } else {
+      const { error } = await S.sb.auth.signInWithPassword({ email, password: senha });
+      if (error) throw error;
+    }
+  } catch(e){ msg(traduzAuth(e)); }
+  finally { if (document.body.contains(btn)){ btn.disabled = false; btn.textContent = rot; } }
+}
+function pubRow(r){ return { apelido: r.apelido || "", concurso: r.concurso || "", stats: r.stats || {}, fcDias: r.fc_dias || {} }; }
+async function startSupa(user){
+  if (S.uid === user.id && S.meLoaded) return;
+  S.uid = user.id; S.email = user.email || ""; S.mode = "db";
+  $("#tabs").hidden = false;
+  $("#view").innerHTML = `<div class="empty"><h3>Carregando seus estudos…</h3><p>Seu painel, matérias e o ranking do grupo aparecem em instantes.</p></div>`;
+  try {
+    const [d, p, b] = await Promise.all([
+      S.sb.from("docs").select("chave,dados"),
+      S.sb.from("publico").select("user_id,apelido,concurso,stats,fc_dias"),
+      S.sb.from("baralhos").select("user_id,decks")
+    ]);
+    const err = d.error || p.error || b.error; if (err) throw err;
+    S.me = null; S.months = {}; S.priv = {};
+    (d.data || []).forEach(r => {
+      if (r.chave === "me") S.me = r.dados;
+      else if (r.chave.indexOf("mes-") === 0) S.months[r.chave.slice(4)] = (r.dados && r.dados.itens) || [];
+      else S.priv[r.chave] = r.dados;
+    });
+    S.all = {}; (p.data || []).forEach(r => { if (r.user_id !== S.uid) S.all[r.user_id] = pubRow(r); });
+    if (S.me) S.all[S.uid] = S.me;
+    S.decks = {}; (b.data || []).forEach(r => { S.decks[r.user_id] = r.decks || {}; });
+  } catch(e){
+    S.uid = null;
+    $("#view").innerHTML = `<div class="empty"><h3>Não foi possível carregar seus dados</h3><p>${esc(errMsg(e))}</p><button class="btn primary" onclick="location.reload()">Tentar de novo</button></div>`;
+    return;
+  }
+  S.meLoaded = true; render(true);
+  S.sb.channel("grupo")
+    .on("postgres_changes", { event: "*", schema: "public", table: "publico" }, ch => {
+      const r = ch.new && ch.new.user_id ? ch.new : null, id = r ? r.user_id : (ch.old && ch.old.user_id);
+      if (!id || id === S.uid) return;
+      if (ch.eventType === "DELETE") delete S.all[id]; else S.all[id] = pubRow(r);
+      render();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "baralhos" }, ch => {
+      const r = ch.new; if (!r || !r.user_id || r.user_id === S.uid) return;
+      S.decks[r.user_id] = r.decks || {}; render();
+    })
+    .subscribe();
+}
+async function upsertDoc(chave, dados){ const { error } = await S.sb.from("docs").upsert({ user_id: S.uid, chave, dados }); if (error) throw error; }
+async function salvarMe(body){
+  await upsertDoc("me", body);
+  const { error } = await S.sb.from("publico").upsert({ user_id: S.uid, apelido: String(body.apelido || "").slice(0, 40), concurso: String(body.concurso || "").slice(0, 80), stats: body.stats || {}, fc_dias: body.fcDias || {} });
+  if (error) throw error;
+}
+async function gravar(path, body){
+  if (path.indexOf("baralhos/") === 0){ const { error } = await S.sb.from("baralhos").upsert({ user_id: S.uid, decks: body.decks || {} }); if (error) throw error; return; }
+  return upsertDoc(path.split("/").pop(), body);
+}
+function startLocal(){
+  S.mode = "local"; S.uid = "local";
+  const saved = lsGet("gabarito-local");
+  S.me = saved?.me || null; S.months = saved?.months || {}; S.priv = saved?.priv || {};
+  S.meLoaded = true; S.all = S.me ? { local: S.me } : {};
+  render();
+}
+function startDb(db, user, id){
+  S.mode = "db"; S.db = db; S.user = user; S.uid = id;
+  S.meRef = db.doc("alunos/" + id);
+  S.meRef.onSnapshot(s => {
+    if (S.me && (S.saving || (s.metadata && s.metadata.hasPendingWrites))) return;
+    S.me = s.exists ? clone(s.data()) : null; S.meLoaded = true;
+    if (S.me) S.all[S.uid] = S.me;
+    render();
+  }, e => { toast(errMsg(e)); });
+  S.meRef.collection("meses").onSnapshot(q => {
+    const m = {}; q.docs.forEach(d => { m[d.id] = clone(d.data().itens || []); });
+    S.months = m; render();
+  }, () => {});
+  db.collection("data/users/" + id).onSnapshot(q => {
+    q.docs.forEach(d => { if (!S.pending.has(privPath(d.id))) S.priv[d.id] = clone(d.data()); });
+    render();
+  }, () => {});
+  db.collection("baralhos").onSnapshot(q => {
+    const out = {}; q.docs.forEach(d => { out[d.id] = clone(d.data().decks || {}); });
+    if (S.pending.has("baralhos/" + S.uid)) out[S.uid] = S.decks[S.uid] || {};
+    S.decks = out; render();
+  }, () => {});
+  db.collection("alunos").onSnapshot(q => {
+    const a = {}; q.docs.forEach(d => { a[d.id] = d.data(); });
+    if (S.me) a[S.uid] = S.me;
+    S.all = a; resolveProfiles(); render();
+  }, () => {});
+}
+async function resolveProfiles(){
+  if (!S.user) return;
+  try { const ids = Object.keys(S.all); if (!ids.length) return; S.profiles = await S.user.profiles(ids); render(); } catch(e){}
+}
+function nomeDe(id){
+  const d = S.all[id];
+  if (d && d.apelido) return d.apelido;
+  const p = S.profiles[id];
+  return (p && p.name) || "Aluno";
+}
+function avatarDe(id){
+  const p = S.profiles[id];
+  if (p && p.avatarUrl) return p.avatarUrl;
+  const n = nomeDe(id), c = CORES[Math.abs([...id].reduce((s,ch) => s*31 + ch.charCodeAt(0), 7)) % CORES.length];
+  const ini = n.split(/\s+/).map(x => x[0]).join("").slice(0,2).toUpperCase();
+  return "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34"><rect width="34" height="34" rx="17" fill="${c}"/><text x="17" y="22" font-family="sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#fff">${esc(ini)}</text></svg>`);
+}
+
+// ---------- navegação ----------
+function setTab(t, silent){
+  if (!["painel","evolucao","materias","cronograma","flashcards","erros","ranking","perfil"].includes(t)) t = "painel";
+  S.tab = t;
+  document.querySelectorAll("#tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.tab === t ? "page" : "false"));
+  if (!silent) render(true);
+}
+
+// ---------- renderização ----------
+function render(force){
+  const v = $("#view");
+  const ae = document.activeElement;
+  if (!force && ae && v.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){ S.dirty = true; return; }
+  S.dirty = false;
+  if (S.mode === "loading" || !S.meLoaded){ return; }
+  $("#btnReg").hidden = !S.me;
+  const keep = {};
+  if (!force) v.querySelectorAll("input[id],textarea[id],select[id]").forEach(el => { keep[el.id] = el.type === "checkbox" ? el.checked : el.value; });
+  if (!S.me){ v.innerHTML = viewOnboarding(); restoreVals(keep); return; }
+  const fn = { painel:viewPainel, evolucao:viewEvolucao, materias:viewMaterias, cronograma:viewCronograma, flashcards:viewFlashcards, erros:viewErros, ranking:viewRanking, perfil:viewPerfil }[S.tab];
+  v.innerHTML = (S.mode === "local" ? `<div class="notice small" style="margin-bottom:20px">Modo individual: seus dados ficam só neste navegador. Abra esta página pelo link compartilhado no Claude para salvar na nuvem e entrar no ranking do grupo.</div>` : "") + fn();
+  restoreVals(keep);
+  drawCharts();
+}
+document.addEventListener("focusout", e => { if (e.relatedTarget && e.relatedTarget.tagName === "BUTTON" && $("#view").contains(e.relatedTarget)) return; setTimeout(() => { if (S.dirty) render(); }, 0); });
+
+function viewOnboarding(){
+  return `<div class="stack" style="max-width:640px;margin:0 auto">
+    <div><p class="label">Primeiro acesso</p><h1>Monte seu plano de estudos</h1>
+    <p class="muted">Cadastre seu concurso e suas matérias. Cada hora estudada e cada questão resolvida alimentam seu painel e o ranking do grupo.</p></div>
+    <form class="panel stack" id="fOnb">
+      <div class="form-grid">
+        <div class="field"><label for="onbNome">Como quer aparecer no ranking</label><input type="text" id="onbNome" maxlength="40" placeholder="Ex.: Ana Souza" required></div>
+        <div class="field"><label for="onbConc">Concurso que está estudando</label><input type="text" id="onbConc" maxlength="80" placeholder="Ex.: TJ-SP Escrevente"></div>
+        <div class="field"><label for="onbMeta">Meta semanal (horas)</label><input type="number" id="onbMeta" min="1" max="100" step="1" value="20"></div>
+        <div class="field"><label for="onbProva">Data da prova (se já souber)</label><input type="date" id="onbProva"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="onbModelo" checked> Começar com as matérias básicas de concursos (Português, RLM, Constitucional, Administrativo, Informática). Você edita tudo depois.</label>
+      <div class="actions" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-act="sair">Entrar com outra conta</button><button class="btn primary" type="submit">Começar</button></div>
+    </form></div>`;
+}
+
+function viewPainel(){
+  const me = S.me, st = me.stats || computeStats(), det = localDetail();
+  const tot = st.total, s7 = periodSum(st, "7"), acc = pct(tot.a, tot.q);
+  const meta = (me.metaSemanalH||0)*60, metaP = meta ? Math.min(100, Math.round(100*s7.min/meta)) : 0;
+  const prova = me.cronograma?.cfg?.dataProva || me.dataProva;
+  const faltam = prova ? diffDays(today(), prova) : null;
+  const fcHoje = fcParaHoje(), erPend = allErros().filter(e => !e.sup).length;
+  const mats = me.materias || [];
+
+  const linhas = mats.map(m => {
+    const x = st.materias[m.id] || { nivel:0, cov:0, q:0, a:0, min:0 }, p = pct(x.a, x.q);
+    return `<tr><td><span class="swatch" style="background:${m.cor}"></span>${esc(m.nome)}</td>
+      <td style="min-width:140px"><div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:${x.nivel}%;background:${m.cor}"></i></div><span class="num">${x.nivel}</span></div></td>
+      <td class="r num">${x.cov}%</td>
+      <td class="r">${p == null ? '<span class="muted">—</span>' : `<span class="pill ${accClass(p)}">${p}%</span>`}</td>
+      <td class="r num">${fmtN(x.q)}</td><td class="r num">${fmtH(x.min)}</td></tr>`;
+  }).join("");
+
+  // Onde melhorar
+  const fracos = [], naoVistos = [];
+  mats.forEach(m => leaves(m).forEach(l => {
+    if (l.vazio) return;
+    const b = det.byLeaf[leafKey(l.mid, l.tid, l.sid)];
+    if (b && b.q >= 5 && b.a/b.q < 0.7) fracos.push({ m, l, p: Math.round(100*b.a/b.q), q: b.q });
+    else if (l.status === 0 && !b) naoVistos.push({ m, l });
+  }));
+  fracos.sort((a,b) => a.p - b.p);
+  const weakHtml = fracos.slice(0,6).map(f => `<li><div class="t"><b>${esc(f.l.nome)}</b><span class="small muted"><span class="swatch" style="background:${f.m.cor}"></span>${esc(f.m.nome)}${f.l.pai ? " · " + esc(f.l.pai) : ""} · ${f.q} questões</span></div><span class="pill ${accClass(f.p)}">${f.p}%</span></li>`).join("");
+  const nvHtml = naoVistos.slice(0, Math.max(0, 6 - fracos.slice(0,6).length)).map(f => `<li><div class="t"><b>${esc(f.l.nome)}</b><span class="small muted"><span class="swatch" style="background:${f.m.cor}"></span>${esc(f.m.nome)}</span></div><span class="pill">não iniciado</span></li>`).join("");
+
+  // Heatmap 15 semanas
+  const cells = []; const fim = today(); const d0 = parseD(fim);
+  let k = addDays(fim, -(7*14) - d0.getDay());
+  const maxMin = Math.max(60, ...Object.values(st.dias||{}).map(x => x.min||0));
+  for (let i = 0; i < 7*15; i++){
+    const v = (st.dias||{})[k]?.min || 0, fut = k > fim;
+    const a = v ? 0.25 + 0.75*Math.min(1, v/maxMin) : 0;
+    cells.push(`<i title="${fmtD(k)}: ${fmtH(v)}" style="${fut ? "opacity:.25;" : ""}${v ? `background:color-mix(in srgb,var(--accent) ${Math.round(a*100)}%,var(--chip))` : ""}"></i>`);
+    k = addDays(k, 1);
+  }
+
+  const recentes = allItems().slice(0, 8).map(i => {
+    const m = findMat(i.mid), p = pct(i.a, i.q);
+    return `<tr><td class="num small">${fmtD(i.data)}</td><td><span class="swatch" style="background:${m?.cor||"var(--muted)"}"></span>${esc(m?.nome || "Matéria removida")}<div class="small muted">${esc(topicLabel(i.mid, i.tid, i.sid))}</div></td>
+      <td><span class="pill">${TIPOS[i.tipo]||""}</span></td><td class="r num">${i.min ? fmtH(i.min) : "—"}</td>
+      <td class="r">${p == null ? '<span class="muted">—</span>' : `<span class="num">${i.a}/${i.q}</span> <span class="pill ${accClass(p)}">${p}%</span>`}</td>
+      <td class="r"><button class="btn ghost sm" data-act="delReg" data-id="${i.id}" data-mk="${i.data.slice(0,7)}" aria-label="Apagar registro">Apagar</button></td></tr>`;
+  }).join("");
+
+  return `<div class="stack">
+    <div class="hello"><div><p class="label">${esc(me.concurso || "Seu concurso")}</p><h1>Olá, ${esc(me.apelido || "estudante")}</h1></div>
+      ${faltam != null && faltam >= 0 ? `<div class="countdown"><div class="num">${faltam}</div><div class="small muted">dias para a prova (${fmtD(prova)})</div></div>` : ""}</div>
+    <div class="kpis">
+      <div class="kpi"><span class="label">Nível geral</span><span class="v">${st.nivel}<span class="small muted">/100</span></span><div class="meter"><i style="width:${st.nivel}%"></i></div><span class="s">40% cobertura do edital + 60% acerto</span></div>
+      <div class="kpi"><span class="label">Últimos 7 dias</span><span class="v">${fmtH(s7.min)}</span><div class="meter"><i style="width:${metaP}%"></i></div><span class="s">${meta ? metaP + "% da meta de " + me.metaSemanalH + "h" : "Defina uma meta no Perfil"}</span></div>
+      <div class="kpi"><span class="label">Horas no total</span><span class="v">${fmtH(tot.min)}</span><span class="s">Sequência atual: ${streak(st.dias||{})} dia(s)</span></div>
+      <div class="kpi"><span class="label">Questões feitas</span><span class="v">${fmtN(tot.q)}</span><span class="s">${fmtN(tot.a)} acertos · ${fmtN(tot.q - tot.a)} erros</span></div>
+      <div class="kpi"><span class="label">Acerto geral</span><span class="v">${acc == null ? "—" : acc + "%"}</span><span class="s">${acc == null ? "Registre questões para medir" : acc >= 75 ? "Bom nível para prova" : acc >= 60 ? "Perto da faixa de aprovação" : "Precisa de reforço"}</span></div>
+      <div class="kpi"><span class="label">Flashcards para hoje</span><span class="v">${fcHoje}</span><span class="s"><a href="#flashcards">Revisar cards</a> · <a href="#erros">${erPend} ${erPend === 1 ? "erro pendente" : "erros pendentes"}</a></span></div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Desempenho por matéria</h2><div class="controls"><a class="btn sm" href="#evolucao">Ver evolução</a><a class="btn sm" href="#materias">Editar matérias</a></div></div>
+      ${mats.length ? `<div class="tw"><table><thead><tr><th>Matéria</th><th>Nível</th><th class="r">Cobertura</th><th class="r">Acerto</th><th class="r">Questões</th><th class="r">Horas</th></tr></thead><tbody>${linhas}</tbody></table></div>`
+        : `<div class="empty"><h3>Nenhuma matéria ainda</h3><p>Cadastre as matérias do seu edital para começar a medir.</p><a class="btn primary" href="#materias">Cadastrar matérias</a></div>`}
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="panel-h"><h2>Onde melhorar</h2><span class="small muted">acerto abaixo de 70% (5+ questões)</span></div>
+        ${weakHtml || nvHtml ? `<div class="weak"><ul>${weakHtml}${nvHtml}</ul></div>` : `<p class="muted">Nada pendente por aqui. Continue registrando questões por tópico para encontrar seus pontos fracos.</p>`}
+      </div>
+      <div class="panel"><div class="panel-h"><h2>Constância</h2><span class="small muted">últimas 15 semanas</span></div>
+        <div class="heat">${cells.join("")}</div>
+        <div class="legend" style="margin-top:10px"><span>Cada quadrado é um dia; quanto mais escuro, mais horas estudadas.</span></div>
+      </div>
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Registros recentes</h2></div>
+      ${recentes ? `<div class="tw"><table><thead><tr><th>Data</th><th>Matéria / tópico</th><th>Tipo</th><th class="r">Tempo</th><th class="r">Acertos</th><th></th></tr></thead><tbody>${recentes}</tbody></table></div>`
+        : `<div class="empty"><h3>Nenhum estudo registrado</h3><p>Use “Registrar estudo” depois de cada sessão de teoria ou bateria de questões.</p><button class="btn primary" data-act="registrar">Registrar o primeiro estudo</button></div>`}
+    </div>
+  </div>`;
+}
+
+function bubbles(status, data){
+  return `<span class="bubbles" role="group" aria-label="Domínio">${[1,2,3].map(n => `<button type="button" class="${status >= n ? "on" : ""}" data-act="status" data-v="${status === n ? n-1 : n}" ${data} title="${STATUS[n]}" aria-label="${STATUS[n]}">${"TRD"[n-1]}</button>`).join("")}</span>`;
+}
+function viewMaterias(){
+  const mats = S.me.materias || [], st = S.me.stats || computeStats(), det = localDetail();
+  const cards = mats.map(m => {
+    const x = st.materias[m.id] || { nivel:0, cov:0, q:0, a:0 }, p = pct(x.a, x.q), open = S.ui.open[m.id];
+    let body = "";
+    if (open){
+      const tops = (m.topicos||[]).map(t => {
+        const tb = det.byTop[m.id+"|"+t.id], tp = tb ? pct(tb.a, tb.q) : null;
+        const subs = (t.subs||[]).map(s => {
+          const sb = det.byLeaf[leafKey(m.id, t.id, s.id)], sp = sb ? pct(sb.a, sb.q) : null;
+          return `<div class="trow"><span class="tn small">${esc(s.nome)}</span>${sp != null ? `<span class="tstat">${sb.a}/${sb.q} <span class="pill ${accClass(sp)}">${sp}%</span></span>` : ""}
+            ${bubbles(s.status||0, `data-m="${m.id}" data-t="${t.id}" data-s="${s.id}"`)}
+            <button class="btn ghost sm" data-act="delSub" data-m="${m.id}" data-t="${t.id}" data-s="${s.id}" aria-label="Remover subtópico">×</button></div>`;
+        }).join("");
+        const adding = S.ui.addSubFor === t.id;
+        return `<div class="topic"><div class="trow"><span class="tn"><b>${esc(t.nome)}</b></span>
+          ${tp != null ? `<span class="tstat">${tb.a}/${tb.q} <span class="pill ${accClass(tp)}">${tp}%</span></span>` : ""}
+          ${(t.subs||[]).length ? "" : bubbles(t.status||0, `data-m="${m.id}" data-t="${t.id}"`)}
+          <button class="btn ghost sm" data-act="showAddSub" data-t="${t.id}">+ subtópico</button>
+          <button class="btn ghost sm" data-act="delTop" data-m="${m.id}" data-t="${t.id}" aria-label="Remover tópico">×</button></div>
+          ${subs || adding ? `<div class="subs">${subs}${adding ? `<form class="inline-add" data-form="addSub" data-m="${m.id}" data-t="${t.id}" style="margin-top:4px"><input type="text" id="addSub-${t.id}" placeholder="Nome do subtópico" maxlength="120" required><button class="btn sm" type="submit">Adicionar</button></form>` : ""}</div>` : ""}
+        </div>`;
+      }).join("");
+      const imp = S.ui.importFor === m.id;
+      body = `<div class="mat-b">
+        ${tops || `<p class="muted small">Nenhum tópico ainda. Adicione um por um ou cole o conteúdo do edital.</p>`}
+        <form class="inline-add" data-form="addTop" data-m="${m.id}"><input type="text" id="addTop-${m.id}" placeholder="Novo tópico (ex.: Crase)" maxlength="120" required><button class="btn sm" type="submit">Adicionar tópico</button></form>
+        ${imp ? `<form class="stack" data-form="import" data-m="${m.id}" style="margin-top:12px;gap:8px">
+            <div class="field"><label for="imp-${m.id}">Cole os tópicos do edital, um por linha. Comece a linha com “-” para criar um subtópico do tópico acima.</label>
+            <textarea id="imp-${m.id}" placeholder="Atos administrativos&#10;- Conceito e requisitos&#10;- Atributos&#10;Poderes administrativos"></textarea></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" class="btn ghost sm" data-act="importToggle" data-m="${m.id}">Cancelar</button><button class="btn primary sm" type="submit">Importar</button></div></form>` : ""}
+        <div class="controls" style="margin-top:14px;justify-content:space-between">
+          <div class="controls">
+            <div class="field" style="flex-direction:row;align-items:center;gap:8px"><label for="peso-${m.id}">Peso na prova</label>
+              <select id="peso-${m.id}" data-act="peso" data-m="${m.id}" style="width:auto">${[1,2,3,4,5].map(n => `<option value="${n}" ${(m.peso||3) === n ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+            ${imp ? "" : `<button class="btn sm" data-act="importToggle" data-m="${m.id}">Colar do edital</button>`}
+            <button class="btn sm" data-act="renMat" data-m="${m.id}">Renomear</button>
+          </div>
+          <button class="btn sm danger" data-act="delMat" data-m="${m.id}">Excluir matéria</button>
+        </div></div>`;
+    }
+    return `<div class="mat"><div class="mat-h" data-act="toggleMat" data-m="${m.id}" role="button" tabindex="0" aria-expanded="${open ? "true" : "false"}">
+      <div class="name"><span class="swatch" style="background:${m.cor};width:14px;height:14px"></span><h3>${esc(m.nome)}</h3></div>
+      <div class="meta small"><span>${estudados(m)}</span><span>Cobertura <b class="num">${x.cov}%</b></span><span>Nível <b class="num">${x.nivel}</b></span>${p != null ? `<span class="pill ${accClass(p)}">${p}% acerto</span>` : ""}<span class="muted" aria-hidden="true">${open ? "▴" : "▾"}</span></div>
+    </div>${body}</div>`;
+  }).join("");
+  return `<div class="stack">
+    <div class="panel-h" style="margin:0"><div><p class="label">Edital</p><h1>Matérias e tópicos</h1></div></div>
+    <div class="legend"><span><b>Domínio</b> de cada tópico, no estilo cartão-resposta:</span><span><b>T</b> teoria lida</span><span><b>R</b> revisado</span><span><b>D</b> dominado</span><span>Clique na bolinha preenchida para voltar um nível.</span></div>
+    ${cards || `<div class="panel empty"><h3>Cadastre a primeira matéria</h3><p>Depois adicione os tópicos e subtópicos do edital.</p></div>`}
+    <form class="panel inline-add" data-form="addMat" style="margin:0"><input type="text" id="addMat" placeholder="Nova matéria (ex.: Direito Penal)" maxlength="80" required><button class="btn primary" type="submit">Adicionar matéria</button></form>
+  </div>`;
+}
+
+function viewCronograma(){
+  const me = S.me, cr = me.cronograma, cfg = cr?.cfg || { horas:[0,3,3,3,3,3,4], bloco:50, semanas:2, revisao:true, dataProva: me.dataProva || "" };
+  const mats = me.materias || [];
+  const form = `<form class="panel stack" data-form="gerar">
+    <div class="panel-h" style="margin:0"><h2>Sua disponibilidade</h2><span class="small muted">horas por dia da semana</span></div>
+    <div class="days">${WD.map((d,i) => `<div class="field"><label for="h${i}">${d}</label><input type="number" id="h${i}" min="0" max="16" step="0.5" value="${cfg.horas[i]||0}"></div>`).join("")}</div>
+    <div class="form-grid">
+      <div class="field"><label for="cBloco">Duração de cada bloco</label><select id="cBloco">${[[25,"25 min (pomodoro)"],[50,"50 min"],[90,"1h30"]].map(([v,l]) => `<option value="${v}" ${cfg.bloco == v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label for="cSem">Período</label><select id="cSem">${[[1,"1 semana"],[2,"2 semanas"],[4,"4 semanas"]].map(([v,l]) => `<option value="${v}" ${cfg.semanas == v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label for="cProva">Data da prova</label><input type="date" id="cProva" value="${esc(cfg.dataProva||"")}"></div>
+    </div>
+    <label class="check"><input type="checkbox" id="cRev" ${cfg.revisao !== false ? "checked" : ""}> Incluir revisões espaçadas (1, 7 e 30 dias depois de estudar cada tópico)</label>
+    <p class="small muted" style="margin:0">As matérias com mais peso e menor nível recebem mais blocos. Dentro de cada matéria, os tópicos menos dominados e com menor acerto vêm primeiro, alternando teoria e questões. Ajuste o peso em Matérias.</p>
+    <div style="display:flex;justify-content:flex-end;gap:8px">${cr ? `<button type="button" class="btn ghost" data-act="limparCron">Apagar cronograma</button>` : ""}<button class="btn primary" type="submit" ${mats.length ? "" : "disabled"}>${cr ? "Gerar de novo" : "Gerar cronograma"}</button></div>
+  </form>`;
+  if (!mats.length) return `<div class="stack"><div><p class="label">Planejamento</p><h1>Cronograma</h1></div><div class="panel empty"><h3>Cadastre suas matérias primeiro</h3><p>O cronograma é montado a partir das matérias, tópicos e do seu desempenho.</p><a class="btn primary" href="#materias">Ir para Matérias</a></div></div>`;
+  let plan = "";
+  if (cr && cr.dias){
+    const tot = cr.dias.reduce((s,d) => s + d.blocos.length, 0), feitos = cr.dias.reduce((s,d) => s + d.blocos.filter(b => b.feito).length, 0);
+    const hoje = today();
+    const dias = cr.dias.map((d, di) => {
+      const mins = d.blocos.reduce((s,b) => s + b.min, 0);
+      const bl = d.blocos.map(b => {
+        const m = findMat(b.mid);
+        return `<div class="blk ${b.feito ? "done" : ""}" style="--c:${m?.cor||"var(--muted)"}">
+          <button class="tick ${b.feito ? "on" : ""}" data-act="tick" data-d="${di}" data-b="${b.id}" aria-label="${b.feito ? "Desmarcar bloco" : "Concluir e registrar bloco"}">${b.feito ? "✓" : ""}</button>
+          <div class="bt"><b>${esc(m?.nome || "Matéria removida")}</b>${esc(topicLabel(b.mid, b.tid, b.sid) || "")}<div class="small muted">${TIPOS[b.tipo]} · ${b.min} min</div></div></div>`;
+      }).join("");
+      return `<div class="day ${d.data === hoje ? "today" : ""}"><div class="day-h"><b>${WDL[parseD(d.data).getDay()]}, ${fmtD(d.data)}</b><span class="small muted num">${mins ? fmtH(mins) : "folga"}</span></div>${bl || `<p class="small muted" style="margin:0">Dia livre.</p>`}</div>`;
+    }).join("");
+    plan = `<div class="panel"><div class="panel-h"><h2>Seu cronograma</h2><span class="small muted">gerado em ${fmtD(cr.geradoEm)} · ${feitos} de ${tot} blocos concluídos</span></div>
+      <div class="meter" style="margin-bottom:16px"><i style="width:${tot ? Math.round(100*feitos/tot) : 0}%"></i></div>
+      <p class="small muted" style="margin-top:0">Marque o círculo ao terminar um bloco: abre o registro já preenchido, com espaço para anotar questões e acertos.</p>
+      <div class="plan">${dias}</div></div>`;
+  }
+  return `<div class="stack"><div><p class="label">Planejamento</p><h1>Cronograma personalizado</h1></div>${plan}${form}</div>`;
+}
+
+function gerarCronograma(cfg){
+  const me = S.me, st = computeStats(), det = localDetail();
+  const mats = (me.materias||[]);
+  const prio = mats.map(m => ({ m, p: (m.peso||3) * (1.5 - (st.materias[m.id]?.nivel || 0)/100), credit: 0 }));
+  const sumP = prio.reduce((s,x) => s + x.p, 0);
+  const queues = {}, ptr = {}, tipoNext = {};
+  mats.forEach(m => {
+    queues[m.id] = leaves(m).map(l => { const b = det.byLeaf[leafKey(l.mid,l.tid,l.sid)]; return { ...l, acc: b && b.q ? b.a/b.q : 1.1 }; })
+      .sort((a,b) => a.status - b.status || a.acc - b.acc);
+    ptr[m.id] = 0;
+  });
+  const last = { ...det.last };
+  const dias = [], inicio = today(), n = cfg.semanas * 7;
+  for (let i = 0; i < n; i++){
+    const data = addDays(inicio, i);
+    if (cfg.dataProva && data > cfg.dataProva) break;
+    const cap = Math.round((cfg.horas[parseD(data).getDay()] || 0) * 60);
+    let slots = Math.floor(cap / cfg.bloco);
+    const blocos = [];
+    if (slots > 0 && cfg.revisao){
+      const revs = [];
+      Object.entries(last).forEach(([k, d]) => { const dd = diffDays(d, data); if (dd === 1 || dd === 7 || dd === 30) revs.push(k); });
+      revs.slice(0, slots >= 4 ? 2 : 1).forEach(k => {
+        const [mid, tid, sid] = k.split("|");
+        if (!findMat(mid)) return;
+        blocos.push({ id: uid(), mid, tid: tid || null, sid: sid || null, tipo: "revisao", min: Math.min(cfg.bloco, 30), feito: false }); slots--;
+      });
+    }
+    let prev = null;
+    for (let s = 0; s < slots && prio.length; s++){
+      prio.forEach(x => x.credit += x.p);
+      const ord = [...prio].sort((a,b) => b.credit - a.credit);
+      let pick = ord[0];
+      if (pick.m.id === prev && ord.length > 1) pick = ord[1];
+      pick.credit -= sumP; prev = pick.m.id;
+      const q = queues[pick.m.id], leaf = q[ptr[pick.m.id] % q.length];
+      let tipo = tipoNext[pick.m.id] || (leaf.status >= 2 ? "questoes" : "teoria");
+      tipoNext[pick.m.id] = tipo === "teoria" ? "questoes" : "teoria";
+      if (tipo === "questoes") ptr[pick.m.id]++;
+      blocos.push({ id: uid(), mid: leaf.mid, tid: leaf.tid, sid: leaf.sid, tipo, min: cfg.bloco, feito: false });
+      if (leaf.tid) last[leafKey(leaf.mid, leaf.tid, leaf.sid)] = data;
+    }
+    dias.push({ data, blocos });
+  }
+  return { cfg, geradoEm: today(), dias };
+}
+
+function viewRanking(){
+  const ids = Object.keys(S.all), meConc = norm(S.me.concurso);
+  const ui = S.ui;
+  let grupo = ids.filter(id => S.all[id] && S.all[id].stats);
+  if (ui.rkGroup === "concurso" && meConc) grupo = grupo.filter(id => norm(S.all[id].concurso) === meConc);
+  const metric = ui.rkMetric, period = ui.rkPeriod;
+  const rows = grupo.map(id => {
+    const d = S.all[id], s = periodSum(d.stats, period), acc = s.q ? s.a/s.q : null;
+    const fc = fcSum(d, period);
+    const val = { pontos: Math.round(s.min/6 + s.q + s.a), horas: s.min, questoes: s.q, acerto: s.q >= 20 ? acc : null, nivel: d.stats.nivel || 0, flashcards: fc.n }[metric];
+    return { id, s, val, fc };
+  });
+  const valid = rows.filter(r => r.val != null).sort((a,b) => b.val - a.val), semDados = rows.filter(r => r.val == null);
+  const maxV = Math.max(1, ...valid.map(r => r.val || 0));
+  const fmtV = v => metric === "horas" ? fmtH(v) : metric === "acerto" ? Math.round(v*100) + "%" : fmtN(v);
+  const subt = r => metric === "flashcards" ? `${fmtN(r.fc.n)} cards revisados · ${pct(r.fc.ok, r.fc.n) ?? "—"}% lembrados` : metric === "acerto" ? `${fmtN(r.s.a)}/${fmtN(r.s.q)} questões` : metric === "nivel" ? `${esc(S.all[r.id].concurso || "sem concurso")}` : `${fmtH(r.s.min)} · ${fmtN(r.s.q)} questões · ${pct(r.s.a, r.s.q) ?? "—"}% acerto`;
+  const board = valid.map((r, i) => `<div class="row ${r.id === S.uid ? "me" : ""}">
+      <span class="pos">${i+1}º</span><img src="${avatarDe(r.id)}" alt="">
+      <div class="who"><b>${esc(nomeDe(r.id))}${r.id === S.uid ? " (você)" : ""}</b><span class="small muted">${subt(r)}</span>
+        <div class="bar" style="margin-top:6px"><i style="width:${Math.round(100*(r.val||0)/maxV)}%;background:var(--accent)"></i></div></div>
+      <span class="val">${fmtV(r.val)}</span></div>`).join("");
+  const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v,l]) => `<button type="button" class="${ui[key] === v ? "on" : ""}" data-act="rk" data-k="${key}" data-v="${v}">${l}</button>`).join("")}</div>`;
+
+  // Matriz por matéria
+  const subjMap = {};
+  grupo.forEach(id => Object.values(S.all[id].stats.materias || {}).forEach(m => { if (!m.key) return; (subjMap[m.key] = subjMap[m.key] || { nome: m.nome, cor: m.cor, cells: {} }).cells[id] = m; }));
+  const subjs = Object.entries(subjMap).filter(([,v]) => Object.keys(v.cells).length >= 1).sort((a,b) => Object.keys(b[1].cells).length - Object.keys(a[1].cells).length).slice(0, 14);
+  const cols = grupo.slice().sort((a,b) => (a === S.uid ? -1 : b === S.uid ? 1 : nomeDe(a).localeCompare(nomeDe(b)))).slice(0, 12);
+  const matrixRows = subjs.map(([k, v]) => {
+    const vals = cols.map(id => { const c = v.cells[id]; return c && c.q >= 5 ? Math.round(100*c.a/c.q) : null; });
+    const nums = vals.filter(x => x != null), best = nums.length > 1 ? Math.max(...nums) : null, worst = nums.length > 1 ? Math.min(...nums) : null;
+    return `<tr><td><span class="swatch" style="background:${v.cor||"var(--muted)"}"></span>${esc(v.nome)}</td>${vals.map(p => p == null ? `<td class="c muted">—</td>` :
+      `<td class="c ${p === best && best !== worst ? "best" : ""} ${p === worst && best !== worst ? "worst" : ""}" style="background:color-mix(in srgb,var(--${accClass(p)}) 16%,transparent)">${p}%</td>`).join("")}</tr>`;
+  }).join("");
+
+  // Quem pode ajudar quem
+  const ajuda = [], ajudo = [];
+  Object.values(S.me.stats?.materias || {}).forEach(mm => {
+    const sub = subjMap[mm.key]; if (!sub) return;
+    const outros = Object.entries(sub.cells).filter(([id, c]) => id !== S.uid && c.q >= 10).map(([id, c]) => ({ id, p: c.a/c.q }));
+    if (!outros.length) return;
+    const meu = mm.q >= 10 ? mm.a/mm.q : null;
+    const melhor = outros.sort((a,b) => b.p - a.p)[0];
+    if (meu == null || melhor.p > meu + 0.05) ajuda.push({ mat: mm.nome, id: melhor.id, p: melhor.p, meu });
+    else if (meu != null && meu > melhor.p) ajudo.push({ mat: mm.nome, meu, pior: outros[outros.length-1] });
+  });
+  const ajudaHtml = ajuda.slice(0,6).map(a => `<div class="card"><span class="label">${esc(a.mat)}</span><div><b>${esc(nomeDe(a.id))}</b> acerta ${Math.round(a.p*100)}%${a.meu != null ? `, você ${Math.round(a.meu*100)}%` : ""}.</div><span class="small muted">Peça dicas ou resolvam questões juntos.</span></div>`).join("");
+  const ajudoHtml = ajudo.slice(0,6).map(a => `<div class="card"><span class="label">${esc(a.mat)}</span><div>Você lidera com <b>${Math.round(a.meu*100)}%</b>.</div><span class="small muted">${esc(nomeDe(a.pior.id))} está com ${Math.round(a.pior.p*100)}% e pode aproveitar sua ajuda.</span></div>`).join("");
+
+  const metricNote = { flashcards: "Flashcards revisados no período: revisão do dia, modo embaralhado e baralhos do grupo.", pontos: "Pontos: 10 por hora estudada, 1 por questão feita e mais 1 por acerto.", horas: "Total de horas registradas no período.", questoes: "Questões resolvidas no período.", acerto: "Taxa de acerto; entra quem fez pelo menos 20 questões no período.", nivel: "Nível atual: 40% cobertura do edital + 60% acerto, ponderado pelo peso das matérias." }[metric];
+  return `<div class="stack">
+    <div><p class="label">Grupo de estudos</p><h1>Ranking</h1></div>
+    <div class="panel">
+      <div class="controls" style="margin-bottom:12px">
+        ${seg("rkMetric", [["pontos","Geral"],["horas","Horas"],["questoes","Questões"],["acerto","Acerto"],["flashcards","Flashcards"],["nivel","Nível"]])}
+        ${metric === "nivel" ? "" : seg("rkPeriod", [["7","7 dias"],["30","30 dias"],["total","Tudo"]])}
+        ${seg("rkGroup", [["concurso","Meu concurso"],["todos","Todos"]])}
+      </div>
+      <p class="small muted" style="margin-top:0">${metricNote}${ui.rkGroup === "concurso" ? (meConc ? ` Mostrando quem estuda para “${esc(S.me.concurso)}”.` : " Informe seu concurso no Perfil para filtrar.") : ""}</p>
+      ${board ? `<div class="board">${board}</div>` : `<div class="empty"><h3>Ainda sem dados no período</h3><p>Registre horas e questões para aparecer aqui.</p></div>`}
+      ${semDados.length ? `<p class="small muted" style="margin-bottom:0">Sem dados suficientes nesta métrica: ${semDados.map(r => esc(nomeDe(r.id))).join(", ")}.</p>` : ""}
+    </div>
+    <div class="panel"><div class="panel-h"><h2>Comparativo por matéria</h2><span class="small muted">acerto com 5+ questões · contorno verde = melhor do grupo, vermelho = quem precisa de apoio</span></div>
+      ${subjs.length && cols.length ? `<div class="tw"><table class="matrix"><thead><tr><th>Matéria</th>${cols.map(id => `<th class="p" title="${esc(nomeDe(id))}">${esc(nomeDe(id).split(" ")[0])}${id === S.uid ? " (você)" : ""}</th>`).join("")}</tr></thead><tbody>${matrixRows}</tbody></table></div>`
+        : `<p class="muted">As matérias são comparadas pelo nome. Quando outros alunos do mesmo concurso registrarem questões, a comparação aparece aqui.</p>`}
+    </div>
+    <div class="grid2">
+      <div class="panel"><div class="panel-h"><h2>Quem pode te ajudar</h2></div>${ajudaHtml ? `<div class="help">${ajudaHtml}</div>` : `<p class="muted">Aparece quando um colega tiver acerto maior que o seu numa matéria em comum (10+ questões).</p>`}</div>
+      <div class="panel"><div class="panel-h"><h2>Onde você pode ajudar</h2></div>${ajudoHtml ? `<div class="help">${ajudoHtml}</div>` : `<p class="muted">Aparece quando você liderar o acerto de uma matéria em comum.</p>`}</div>
+    </div>
+  </div>`;
+}
+
+function viewPerfil(){
+  const me = S.me;
+  return `<div class="stack" style="max-width:720px">
+    <div><p class="label">Conta</p><h1>Perfil</h1></div>
+    <form class="panel stack" data-form="perfil">
+      <div class="form-grid">
+        <div class="field"><label for="pNome">Nome no ranking</label><input type="text" id="pNome" maxlength="40" value="${esc(me.apelido||"")}" required></div>
+        <div class="field"><label for="pConc">Concurso</label><input type="text" id="pConc" maxlength="80" value="${esc(me.concurso||"")}"></div>
+        <div class="field"><label for="pMeta">Meta semanal (horas)</label><input type="number" id="pMeta" min="1" max="100" value="${me.metaSemanalH||20}"></div>
+      </div>
+      <p class="small muted" style="margin:0">Use o mesmo nome de concurso que seus colegas (ex.: “TJ-SP Escrevente”) para aparecerem juntos no ranking. Maiúsculas e acentos não importam.</p>
+      <div style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Salvar perfil</button></div>
+    </form>
+    <div class="panel"><div class="panel-h" style="margin:0"><div><h2>Conta</h2><p class="small muted" style="margin:4px 0 0">${esc(S.email || "")}</p></div><button class="btn" data-act="sair">Sair da conta</button></div></div>
+    <div class="panel"><h2 style="margin-bottom:8px">O que o grupo vê</h2>
+      <p class="muted" style="margin:0">Todos os alunos cadastrados na plataforma veem seu nome, concurso, totais de horas, questões e flashcards revisados, acerto por matéria, nível e os baralhos que você compartilhar. Seus flashcards e seu caderno de erros são só seus: ninguém mais tem acesso a eles.</p></div>
+  </div>`;
+}
+
+// ---------- modais ----------
+function closeModal(){ $("#modalRoot").innerHTML = ""; if (S.dirty) render(); }
+function confirmBox(msg, okLabel){
+  return new Promise(res => {
+    $("#modalRoot").innerHTML = `<div class="scrim"><div class="modal" role="dialog" aria-modal="true"><p style="margin:0">${esc(msg)}</p><div class="actions"><button class="btn" id="cNo">Cancelar</button><button class="btn primary" id="cOk">${esc(okLabel||"Confirmar")}</button></div></div></div>`;
+    $("#cNo").onclick = () => { closeModal(); res(false); };
+    $("#cOk").onclick = () => { closeModal(); res(true); };
+    $("#cOk").focus();
+  });
+}
+function promptBox(label, value){
+  return new Promise(res => {
+    $("#modalRoot").innerHTML = `<div class="scrim"><form class="modal" id="pForm"><div class="field"><label for="pVal">${esc(label)}</label><input type="text" id="pVal" maxlength="80" value="${esc(value||"")}" required></div><div class="actions"><button type="button" class="btn" id="pNo">Cancelar</button><button class="btn primary" type="submit">Salvar</button></div></form></div>`;
+    $("#pNo").onclick = () => { closeModal(); res(null); };
+    $("#pForm").onsubmit = e => { e.preventDefault(); const v = $("#pVal").value.trim(); closeModal(); res(v || null); };
+    $("#pVal").focus();
+  });
+}
+function openRegistro(pre){
+  pre = pre || {};
+  const mats = S.me.materias || [];
+  if (!mats.length){ toast("Cadastre uma matéria antes de registrar."); location.hash = "materias"; return; }
+  const mid0 = pre.mid || mats[0].id;
+  $("#modalRoot").innerHTML = `<div class="scrim"><form class="modal" id="rForm" novalidate>
+    <h2>Registrar estudo</h2>
+    <div class="form-grid">
+      <div class="field"><label for="rData">Data</label><input type="date" id="rData" value="${pre.data || today()}" max="${today()}"></div>
+      <div class="field"><label for="rTipo">Tipo</label><select id="rTipo">${Object.entries(TIPOS).map(([k,l]) => `<option value="${k}" ${pre.tipo === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    </div>
+    <div class="field"><label for="rMat">Matéria</label><select id="rMat">${mats.map(m => `<option value="${m.id}" ${m.id === mid0 ? "selected" : ""}>${esc(m.nome)}</option>`).join("")}</select></div>
+    <div class="form-grid">
+      <div class="field"><label for="rTop">Tópico</label><select id="rTop"></select></div>
+      <div class="field"><label for="rSub">Subtópico</label><select id="rSub"></select></div>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label for="rMin">Tempo (min)</label><input type="number" id="rMin" min="0" max="900" value="${pre.min ?? ""}" placeholder="50"></div>
+      <div class="field"><label for="rQ">Questões feitas</label><input type="number" id="rQ" min="0" max="2000" value="" placeholder="0"></div>
+      <div class="field"><label for="rA">Acertos</label><input type="number" id="rA" min="0" max="2000" value="" placeholder="0"></div>
+    </div>
+    <div class="field"><label for="rObs">Anotação (opcional)</label><input type="text" id="rObs" maxlength="200" placeholder="Ex.: errei as de crase facultativa"></div>
+    <div class="err" id="rErr" hidden></div>
+    <div class="actions"><button type="button" class="btn" id="rNo">Cancelar</button><button class="btn primary" type="submit">Salvar registro</button></div>
+  </form></div>`;
+  const fillTop = () => {
+    const m = findMat($("#rMat").value);
+    $("#rTop").innerHTML = `<option value="">Matéria inteira</option>` + (m.topicos||[]).map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join("");
+    if (pre.tid && m.id === pre.mid) $("#rTop").value = pre.tid;
+    fillSub();
+  };
+  const fillSub = () => {
+    const m = findMat($("#rMat").value), t = findTop(m, $("#rTop").value);
+    const subs = t?.subs || [];
+    $("#rSub").innerHTML = `<option value="">${subs.length ? "Tópico inteiro" : "—"}</option>` + subs.map(s => `<option value="${s.id}">${esc(s.nome)}</option>`).join("");
+    $("#rSub").disabled = !subs.length;
+    if (pre.sid && t && t.id === pre.tid) $("#rSub").value = pre.sid;
+  };
+  $("#rMat").onchange = () => { pre.tid = null; pre.sid = null; fillTop(); };
+  $("#rTop").onchange = () => { pre.sid = null; fillSub(); };
+  fillTop();
+  $("#rNo").onclick = closeModal;
+  $("#rForm").onsubmit = e => {
+    e.preventDefault();
+    const min = Math.max(0, parseInt($("#rMin").value) || 0), q = Math.max(0, parseInt($("#rQ").value) || 0), a = Math.max(0, parseInt($("#rA").value) || 0);
+    const data = $("#rData").value || today();
+    const err = $("#rErr");
+    if (a > q){ err.textContent = "Os acertos não podem passar do número de questões."; err.hidden = false; return; }
+    if (!min && !q){ err.textContent = "Informe o tempo estudado ou as questões feitas."; err.hidden = false; return; }
+    if (data > today()){ err.textContent = "A data não pode ser no futuro."; err.hidden = false; return; }
+    const it = { id: uid(), data, mid: $("#rMat").value, tid: $("#rTop").value || null, sid: $("#rSub").value || null, tipo: $("#rTipo").value, min, q, a, obs: $("#rObs").value.trim().slice(0,200), ts: Date.now() };
+    const mk = data.slice(0,7);
+    (S.months[mk] = S.months[mk] || []).push(it);
+    // avança o domínio do tópico
+    const m = findMat(it.mid), t = findTop(m, it.tid), node = t ? (it.sid ? (t.subs||[]).find(s => s.id === it.sid) : ((t.subs||[]).length ? null : t)) : null;
+    if (node){ const alvo = it.tipo === "revisao" ? 2 : 1; if ((node.status||0) < alvo) node.status = alvo; }
+    if (pre.planDay != null && S.me.cronograma){ const d = S.me.cronograma.dias[pre.planDay]; const b = d && d.blocos.find(x => x.id === pre.planBlock); if (b) b.feito = true; }
+    closeModal();
+    saveMonth(mk); saveMe();
+    toast(q ? `Registrado: ${a}/${q} acertos (${pct(a,q)}%).` : `Registrado: ${fmtH(min)} de estudo.`);
+    if (q > a) ofertaErros(it, q - a);
+  };
+  $("#rMin").focus();
+}
+
+let toastT = null;
+function toast(msg){
+  let t = $(".toast"); if (!t){ t = document.createElement("div"); t.className = "toast"; t.setAttribute("role","status"); document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+// ---------- eventos ----------
+document.addEventListener("click", async e => {
+  const au = e.target.closest("[data-auth]");
+  if (au){ const em = ($("#aEmail") || {}).value || ""; renderAuth(au.dataset.auth); $("#aEmail").value = em; ($("#aEmail").value ? $("#aSenha") : $("#aEmail")).focus(); return; }
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, me = S.me;
+  if (act === "sair"){ el.disabled = true; try { await S.sb.auth.signOut(); } catch(_){ location.reload(); } return; }
+  if (act === "registrar"){ openRegistro(); return; }
+  if (!me) return;
+  const m = el.dataset.m ? findMat(el.dataset.m) : null;
+  if (act === "toggleMat"){ S.ui.open[el.dataset.m] = !S.ui.open[el.dataset.m]; render(true); return; }
+  if (act === "status"){
+    const t = findTop(m, el.dataset.t), node = el.dataset.s ? (t.subs||[]).find(s => s.id === el.dataset.s) : t;
+    node.status = Number(el.dataset.v); saveMe(); return;
+  }
+  if (act === "showAddSub"){ S.ui.addSubFor = el.dataset.t; render(true); const i = document.getElementById("addSub-" + el.dataset.t); if (i) i.focus(); return; }
+  if (act === "importToggle"){ S.ui.importFor = S.ui.importFor === el.dataset.m ? null : el.dataset.m; render(true); return; }
+  if (act === "delSub"){ const t = findTop(m, el.dataset.t); t.subs = (t.subs||[]).filter(s => s.id !== el.dataset.s); saveMe(); return; }
+  if (act === "delTop"){
+    const t = findTop(m, el.dataset.t);
+    if (!(await confirmBox(`Remover o tópico “${t.nome}” e seus subtópicos? Os registros de estudo continuam salvos.`, "Remover"))) return;
+    m.topicos = m.topicos.filter(x => x.id !== el.dataset.t); saveMe(); return;
+  }
+  if (act === "delMat"){
+    if (!(await confirmBox(`Excluir a matéria “${m.nome}”? Tópicos e estatísticas dela saem do painel e do ranking.`, "Excluir"))) return;
+    me.materias = me.materias.filter(x => x.id !== m.id); saveMe(); return;
+  }
+  if (act === "renMat"){ const v = await promptBox("Novo nome da matéria", m.nome); if (v){ m.nome = v; saveMe(); } return; }
+  if (act === "delReg"){
+    if (!(await confirmBox("Apagar este registro? Horas e questões dele saem das estatísticas.", "Apagar"))) return;
+    const mk = el.dataset.mk; S.months[mk] = (S.months[mk]||[]).filter(i => i.id !== el.dataset.id); saveMonth(mk); saveMe(); return;
+  }
+  if (act === "tick"){
+    const d = me.cronograma.dias[Number(el.dataset.d)], b = d.blocos.find(x => x.id === el.dataset.b);
+    if (b.feito){ b.feito = false; saveMe(); return; }
+    openRegistro({ mid: b.mid, tid: b.tid, sid: b.sid, tipo: b.tipo, min: b.min, data: d.data <= today() ? d.data : today(), planDay: Number(el.dataset.d), planBlock: b.id });
+    return;
+  }
+  if (act === "limparCron"){ if (await confirmBox("Apagar o cronograma atual?", "Apagar")){ delete me.cronograma; saveMe(); } return; }
+  if (act === "rk"){ S.ui[el.dataset.k] = el.dataset.v; render(true); return; }
+  if (act === "fcRevisar"){ sessaoRevisao(el.dataset.m || null); return; }
+  if (act === "fcShuffle"){ sessaoEmbaralhada($("#fcShufMat").value, Number($("#fcShufN").value) || 20); return; }
+  if (act === "fcNovo"){ openCard({ mid: el.dataset.m }); return; }
+  if (act === "fcToggle"){ S.ui.fcOpen[el.dataset.m] = !S.ui.fcOpen[el.dataset.m]; render(true); return; }
+  if (act === "fcEdit"){ openCard({ mid: el.dataset.m }, el.dataset.id); return; }
+  if (act === "fcDel"){
+    if (!(await confirmBox("Apagar este flashcard?", "Apagar"))) return;
+    const d = fcDoc(el.dataset.m); d.cards = d.cards.filter(c => c.id !== el.dataset.id); savePriv("fc-" + el.dataset.m); return;
+  }
+  if (act === "dkPlay"){ praticarBaralho(el.dataset.o, el.dataset.d); return; }
+  if (act === "dkCopy"){ copiarBaralho(el.dataset.o, el.dataset.d); return; }
+  if (act === "dkSync"){
+    const d = (S.decks[S.uid] || {})[el.dataset.d]; if (!d) return;
+    if (!findMat(d.mid)){ toast("A matéria de origem deste baralho foi excluída."); return; }
+    const prev = { cards: d.cards, em: d.em };
+    d.cards = fcDoc(d.mid).cards.slice(0, 400).map(c => ({ id: c.id, f: c.f, v: c.v })); d.em = today();
+    if (!cabeDecks()){ Object.assign(d, prev); return; }
+    saveDecks(); toast("Baralho atualizado com seus cards atuais."); return;
+  }
+  if (act === "dkDel"){
+    if (!(await confirmBox("Remover este baralho do grupo? Seus cards continuam com você.", "Remover"))) return;
+    const mine = S.decks[S.uid] || {}; delete mine[el.dataset.d]; saveDecks(); toast("Baralho removido do grupo."); return;
+  }
+  if (act === "erNovo"){ openErro({}); return; }
+  if (act === "erRevisar"){ sessaoErros(); return; }
+  if (["erRev", "erSup", "erFc", "erEdit", "erDel"].includes(act)){
+    const mid = el.dataset.m, e2 = erDoc(mid).itens.find(x => x.id === el.dataset.id); if (!e2) return;
+    if (act === "erRev"){ e2.revs = (e2.revs || 0) + 1; e2.ultRev = today(); savePriv("er-" + mid); toast("Revisão registrada."); }
+    else if (act === "erSup"){ e2.sup = !e2.sup; savePriv("er-" + mid); toast(e2.sup ? "Erro marcado como superado." : "Erro reaberto."); }
+    else if (act === "erFc"){
+      const fd = fcDoc(mid);
+      if (fd.cards.some(c => c.deErro === e2.id)){ toast("Este erro já virou flashcard."); return; }
+      fd.cards.push({ id: uid(), f: e2.enun || ("Erro em " + (topicLabel(mid, e2.tid, e2.sid) || m?.nome || "")), v: e2.lembrar || "", tid: e2.tid, sid: e2.sid, criado: today(), deErro: e2.id });
+      const cut = ajustaLimite("fc-" + mid, "cards"); savePriv("fc-" + mid); toast(cut ? LIMITE : "Flashcard criado a partir do erro.");
+    }
+    else if (act === "erEdit"){ openErro({ mid }, e2.id); }
+    else if (act === "erDel"){
+      if (!(await confirmBox("Apagar este erro do caderno?", "Apagar"))) return;
+      const d = erDoc(mid); d.itens = d.itens.filter(x => x.id !== el.dataset.id); savePriv("er-" + mid);
+    }
+    return;
+  }
+});
+document.addEventListener("keydown", e => {
+  const st = S.study;
+  if (st && st.i < st.items.length && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)){
+    if ((e.key === " " || e.key === "Enter") && !st.shown){ e.preventDefault(); st.shown = true; renderStudy(); return; }
+    if (st.shown){ const map = st.mode === "srs" ? { "1": 0, "2": 1, "3": 2, "4": 3 } : { "1": 0, "2": 3 }; if (e.key in map){ e.preventDefault(); gradeStudy(map[e.key]); return; } }
+  }
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches(".mat-h")){ e.preventDefault(); e.target.click(); }
+  if (e.key === "Escape" && $("#modalRoot").innerHTML){ const no = $("#rNo") || $("#pNo") || $("#cNo") || $("#kNo") || $("#eNo") || $("#sClose"); if (no) no.click(); }
+});
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-sact]"); if (!el || !S.study) return;
+  const a = el.dataset.sact, st = S.study;
+  if (a === "close"){ S.study = null; closeModal(); if (st.done && st.i < st.items.length) toast(`Sessão encerrada: ${st.done} ${st.mode === "erros" ? "erros revisados" : "cards"}.`); return; }
+  if (a === "flip"){ st.shown = true; renderStudy(); return; }
+  if (a === "grade"){ gradeStudy(Number(el.dataset.g)); return; }
+});
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.act === "peso"){ const m = findMat(el.dataset.m); m.peso = Number(el.value); el.blur(); saveMe(); }
+  if (el.dataset.act === "uiSel"){ S.ui[el.dataset.k] = el.value; el.blur(); render(); }
+});
+document.addEventListener("submit", e => {
+  const f = e.target;
+  if (f.id === "fAuth"){ e.preventDefault(); entrar(); return; }
+  if (f.id === "fOnb"){
+    e.preventDefault();
+    const nome = $("#onbNome").value.trim(); if (!nome){ $("#onbNome").focus(); return; }
+    const materias = $("#onbModelo").checked ? MODELO.map((m, i) => ({ id: uid(), nome: m.nome, cor: CORES[i % CORES.length], peso: m.peso, topicos: m.t.map(n => ({ id: uid(), nome: n, status: 0, subs: [] })) })) : [];
+    S.me = { v: 1, apelido: nome.slice(0,40), concurso: $("#onbConc").value.trim().slice(0,80), metaSemanalH: Math.max(1, parseInt($("#onbMeta").value) || 20), dataProva: $("#onbProva").value || "", materias, criadoEm: new Date().toISOString() };
+    location.hash = "painel"; S.tab = "painel"; setTab("painel", true);
+    saveMe(); render(true); return;
+  }
+  const kind = f.dataset.form; if (!kind) return;
+  e.preventDefault();
+  const me = S.me, m = f.dataset.m ? findMat(f.dataset.m) : null;
+  if (kind === "addMat"){
+    const v = $("#addMat").value.trim(); if (!v) return;
+    const id = uid(); me.materias = me.materias || [];
+    me.materias.push({ id, nome: v.slice(0,80), cor: CORES[me.materias.length % CORES.length], peso: 3, topicos: [] });
+    S.ui.open[id] = true; document.activeElement.blur(); saveMe(); render(true); return;
+  }
+  if (kind === "addTop"){
+    const inp = document.getElementById("addTop-" + m.id), v = inp.value.trim(); if (!v) return;
+    m.topicos = m.topicos || []; m.topicos.push({ id: uid(), nome: v.slice(0,120), status: 0, subs: [] });
+    saveMe(); render(true); const n = document.getElementById("addTop-" + m.id); if (n) n.focus(); return;
+  }
+  if (kind === "addSub"){
+    const t = findTop(m, f.dataset.t), inp = document.getElementById("addSub-" + t.id), v = inp.value.trim(); if (!v) return;
+    t.subs = t.subs || [];
+    if (!t.subs.length && t.status){ /* o domínio passa a ser medido pelos subtópicos */ }
+    t.subs.push({ id: uid(), nome: v.slice(0,120), status: 0 });
+    saveMe(); render(true); const n = document.getElementById("addSub-" + t.id); if (n) n.focus(); return;
+  }
+  if (kind === "import"){
+    const txt = document.getElementById("imp-" + m.id).value;
+    let cur = null, nT = 0, nS = 0; m.topicos = m.topicos || [];
+    txt.split(/\r?\n/).forEach(raw => {
+      if (!raw.trim()) return;
+      const isSub = /^\s+|^\s*[-–•*]/.test(raw) && cur;
+      const name = raw.replace(/^\s*[-–•*]?\s*(\d+(\.\d+)*[.)]?\s+)?/, "").trim().slice(0,120);
+      if (!name) return;
+      if (isSub){ cur.subs.push({ id: uid(), nome: name, status: 0 }); nS++; }
+      else { cur = { id: uid(), nome: name, status: 0, subs: [] }; m.topicos.push(cur); nT++; }
+    });
+    S.ui.importFor = null; document.activeElement.blur(); saveMe(); render(true);
+    toast(`Importados ${nT} tópicos e ${nS} subtópicos.`); return;
+  }
+  if (kind === "gerar"){
+    const cfg = { horas: WD.map((_, i) => Math.max(0, Math.min(16, parseFloat(document.getElementById("h"+i).value) || 0))), bloco: Number($("#cBloco").value), semanas: Number($("#cSem").value), dataProva: $("#cProva").value || "", revisao: $("#cRev").checked };
+    if (!cfg.horas.some(h => h * 60 >= cfg.bloco)){ toast("Informe horas suficientes para pelo menos um bloco em algum dia."); return; }
+    me.dataProva = cfg.dataProva;
+    me.cronograma = gerarCronograma(cfg);
+    document.activeElement.blur(); saveMe(); render(true);
+    toast("Cronograma gerado."); window.scrollTo({ top: 0, behavior: "smooth" }); return;
+  }
+  if (kind === "bulk"){
+    const mid = $("#bulkMat").value, txt = $("#bulkTxt").value, doc = fcDoc(mid); let n = 0;
+    txt.split(/\r?\n/).forEach(l => {
+      if (!l.trim()) return;
+      let i = l.indexOf("\t"), w = 1;
+      if (i < 0){ i = l.indexOf("|"); w = 1; }
+      if (i < 0){ i = l.indexOf(";"); w = 1; }
+      const f = (i < 0 ? l : l.slice(0, i)).trim(), v = i < 0 ? "" : l.slice(i + w).trim();
+      if (!f) return;
+      doc.cards.push({ id: uid(), f: f.slice(0, 1000), v: v.slice(0, 1000), tid: null, sid: null, criado: today() }); n++;
+    });
+    if (!n){ toast("Escreva pelo menos um card, com frente | verso."); return; }
+    const cut = ajustaLimite("fc-" + mid, "cards");
+    S.ui.bulkMat = mid; S.ui.fcOpen[mid] = true;
+    document.activeElement.blur(); savePriv("fc-" + mid); render(true);
+    toast(cut ? LIMITE : `${n} ${n > 1 ? "cards criados" : "card criado"} em ${findMat(mid)?.nome || ""}.`); return;
+  }
+  if (kind === "share"){
+    const mid = $("#dkMat").value, m = findMat(mid), cards = fcDoc(mid).cards;
+    if (!m || !cards.length){ toast("Essa matéria ainda não tem flashcards."); return; }
+    const mine = S.decks[S.uid] || (S.decks[S.uid] = {});
+    const did = Object.keys(mine).find(k => mine[k].mid === mid) || uid(), prev = mine[did];
+    mine[did] = { titulo: ($("#dkTit").value.trim() || prev?.titulo || m.nome).slice(0, 80), materia: m.nome, mkey: norm(m.nome), cor: m.cor, concurso: S.me.concurso || "", ckey: norm(S.me.concurso), mid, cards: cards.slice(0, 400).map(c => ({ id: c.id, f: c.f, v: c.v })), em: today() };
+    if (!cabeDecks()){ if (prev) mine[did] = prev; else delete mine[did]; return; }
+    document.activeElement.blur(); saveDecks(); render(true);
+    toast(prev ? "Baralho atualizado para o grupo." : "Baralho compartilhado com o grupo."); return;
+  }
+  if (kind === "perfil"){
+    const nome = $("#pNome").value.trim(); if (!nome) return;
+    me.apelido = nome.slice(0,40); me.concurso = $("#pConc").value.trim().slice(0,80); me.metaSemanalH = Math.max(1, parseInt($("#pMeta").value) || 20);
+    document.activeElement.blur(); saveMe(); render(true); toast("Perfil salvo."); return;
+  }
+});
+
+boot();
+})();
+</script>
+</body>
+</html>
