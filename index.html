@@ -249,6 +249,9 @@ input[type=email],input[type=password]{background:var(--surface);border:1px soli
 .who-a{display:flex;flex-direction:column;min-width:0}
 .who-a b{overflow-wrap:anywhere}
 @media (max-width:700px){.arow{grid-template-columns:1fr}}
+.modelo-aviso{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 16px;border-radius:var(--r);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+#cEdital{min-height:300px;font-family:var(--f-mono);font-size:.84rem}
+.form-grid .field:has(#onbConcSel),.form-grid .field:has(#pConcSel){grid-column:1/-1}
 /* Curvas */
 .chart{position:relative;margin-top:6px}
 .chart svg{touch-action:pan-y}
@@ -1068,6 +1071,132 @@ function viewEvolucao(){
   </div>`;
 }
 
+// ---------- concursos e editais-modelo ----------
+async function carregarConcursos(){
+  if (!S.sb) return;
+  let data = null;
+  try { const r = await S.sb.from("concursos").select("id,nome,materias,ativo,atualizado_em").order("nome"); if (r.error) return; data = r.data; } catch(e){ return; }
+  S.concursos = data || [];
+  sincronizarConcurso();
+  render();
+}
+function sincronizarConcurso(){
+  const me = S.me; if (!me || !me.concursoId) return;
+  const c = (S.concursos || []).find(x => x.id === me.concursoId);
+  if (c && c.nome !== me.concurso){ me.concurso = c.nome; saveMe(); }
+}
+function concursoDoAluno(){
+  const me = S.me; if (!me) return null;
+  const L = S.concursos || [];
+  return L.find(x => x.id === me.concursoId) || (me.concurso ? L.find(x => norm(x.nome) === norm(me.concurso)) : null) || null;
+}
+function parseEdital(txt){
+  const mats = []; let m = null, t = null;
+  String(txt || "").split(/\r?\n/).forEach(raw => {
+    const l = raw.trim(); if (!l) return;
+    if (l[0] === "#"){
+      let nome = l.replace(/^#+\s*/, ""), peso = 3;
+      const pm = nome.match(/\(\s*peso\s*:?\s*(\d)\s*\)\s*$/i);
+      if (pm){ peso = Math.min(5, Math.max(1, Number(pm[1]))); nome = nome.slice(0, pm.index).trim(); }
+      if (!nome) return;
+      m = { nome: nome.slice(0, 80), peso, topicos: [] }; mats.push(m); t = null; return;
+    }
+    if (!m){ m = { nome: "Geral", peso: 3, topicos: [] }; mats.push(m); }
+    const sub = /^[-–•*]/.test(l);
+    const nome = l.replace(/^[-–•*]\s*/, "").replace(/^\d+(\.\d+)*[.)]?\s+/, "").trim().slice(0, 120);
+    if (!nome) return;
+    if (sub && t) t.subs.push(nome); else { t = { nome, subs: [] }; m.topicos.push(t); }
+  });
+  return mats;
+}
+function editalTexto(mats){
+  return (mats || []).map(m => `# ${m.nome} (peso ${m.peso || 3})` + (m.topicos || []).map(t => "\n" + t.nome + (t.subs || []).map(s => "\n- " + (typeof s === "string" ? s : s.nome)).join("")).join("")).join("\n\n");
+}
+function contarEdital(mats){ let t = 0, s = 0; (mats || []).forEach(m => { t += (m.topicos || []).length; (m.topicos || []).forEach(x => { s += (x.subs || []).length; }); }); return { m: (mats || []).length, t, s }; }
+function resumoEdital(k){ return `${k.m} ${k.m === 1 ? "matéria" : "matérias"} · ${k.t} ${k.t === 1 ? "tópico" : "tópicos"} · ${k.s} ${k.s === 1 ? "subtópico" : "subtópicos"}`; }
+function materiasDoModelo(c){
+  return (c.materias || []).map((m, i) => ({ id: uid(), nome: m.nome, cor: CORES[i % CORES.length], peso: m.peso || 3,
+    topicos: (m.topicos || []).map(t => ({ id: uid(), nome: t.nome, status: 0, subs: (t.subs || []).map(s => ({ id: uid(), nome: s, status: 0 })) })) }));
+}
+function mesclarModelo(alvo, c){
+  const n = { m: 0, t: 0, s: 0 };
+  (c.materias || []).forEach(mm => {
+    let m = alvo.find(x => norm(x.nome) === norm(mm.nome));
+    if (!m){ m = { id: uid(), nome: mm.nome, cor: CORES[alvo.length % CORES.length], peso: mm.peso || 3, topicos: [] }; alvo.push(m); n.m++; }
+    m.topicos = m.topicos || [];
+    (mm.topicos || []).forEach(tt => {
+      let t = m.topicos.find(x => norm(x.nome) === norm(tt.nome));
+      if (!t){ t = { id: uid(), nome: tt.nome, status: 0, subs: [] }; m.topicos.push(t); n.t++; }
+      t.subs = t.subs || [];
+      (tt.subs || []).forEach(sn => { if (!t.subs.some(x => norm(x.nome) === norm(sn))){ t.subs.push({ id: uid(), nome: sn, status: 0 }); n.s++; } });
+    });
+  });
+  return n;
+}
+function faltandoDoModelo(){
+  const c = concursoDoAluno(); if (!c || !(c.materias || []).length || !S.me) return null;
+  const n = mesclarModelo(clone(S.me.materias || []), c);
+  return n.m + n.t + n.s ? { c, n } : null;
+}
+function bannerModelo(){
+  const f = faltandoDoModelo(); if (!f) return "";
+  const p = []; if (f.n.m) p.push(f.n.m + (f.n.m === 1 ? " matéria" : " matérias")); if (f.n.t) p.push(f.n.t + (f.n.t === 1 ? " tópico" : " tópicos")); if (f.n.s) p.push(f.n.s + (f.n.s === 1 ? " subtópico" : " subtópicos"));
+  return `<div class="modelo-aviso"><div><b>Edital-modelo de ${esc(f.c.nome)}</b><div class="small muted">${p.join(", ")} do edital ainda não ${f.n.m + f.n.t + f.n.s === 1 ? "está" : "estão"} nas suas matérias. Nada do que você já tem é apagado.</div></div><button class="btn primary sm" data-act="aplicarModelo">Adicionar ao meu edital</button></div>`;
+}
+function campoConcurso(prefixo, atualId, atualNome){
+  const ativos = (S.concursos || []).filter(c => c.ativo || c.id === atualId);
+  if (!ativos.length) return `<div class="field"><label for="${prefixo}Conc">Concurso que está estudando</label><input type="text" id="${prefixo}Conc" maxlength="80" value="${esc(atualNome || "")}" placeholder="Ex.: TJ-SP Escrevente"></div>`;
+  const naLista = ativos.find(c => c.id === atualId) || (atualNome ? ativos.find(c => norm(c.nome) === norm(atualNome)) : null) || (!atualNome ? ativos[0] : null);
+  const outro = !naLista;
+  return `<div class="field"><label for="${prefixo}ConcSel">Concurso que está estudando</label><select id="${prefixo}ConcSel" data-act="concSel" data-p="${prefixo}">${ativos.map(c => `<option value="${c.id}" ${naLista && naLista.id === c.id ? "selected" : ""}>${esc(c.nome)}</option>`).join("")}<option value="__outro" ${outro ? "selected" : ""}>Outro (não está na lista)</option></select></div>
+    <div class="field" id="${prefixo}Outro" ${outro ? "" : "hidden"}><label for="${prefixo}Conc">Nome do concurso</label><input type="text" id="${prefixo}Conc" maxlength="80" value="${esc(outro ? atualNome || "" : "")}" placeholder="Ex.: TJ-SP Escrevente"></div>`;
+}
+function lerConcurso(prefixo){
+  const sel = document.getElementById(prefixo + "ConcSel"), txt = document.getElementById(prefixo + "Conc");
+  if (sel && sel.value !== "__outro"){ const c = (S.concursos || []).find(x => x.id === sel.value); if (c) return { nome: c.nome, id: c.id, c }; }
+  return { nome: (txt ? txt.value : "").trim().slice(0, 80), id: null, c: null };
+}
+function adminConcursos(){
+  const L = S.concursos || [];
+  const alunosDe = c => Object.values(S.all).filter(a => a && a.concurso && norm(a.concurso) === norm(c.nome)).length;
+  const linhas = L.map(c => { const k = contarEdital(c.materias), n = alunosDe(c);
+    return `<div class="arow"><div class="who-a"><b>${esc(c.nome)}</b><span class="small muted">${resumoEdital(k)}</span></div><span class="small muted">${n} ${n === 1 ? "aluno" : "alunos"}${c.ativo ? "" : ` · <span class="pill">oculto</span>`}</span><div class="controls"><button class="btn sm" data-act="concEditar" data-id="${c.id}">Editar edital</button><button class="btn sm ghost" data-act="concAtivo" data-id="${c.id}">${c.ativo ? "Ocultar" : "Mostrar"}</button><button class="btn sm ghost danger" data-act="concApagar" data-id="${c.id}">Excluir</button></div></div>`; }).join("");
+  return `<div class="panel"><div class="panel-h"><div><h2>Concursos e editais-modelo</h2><p class="small muted" style="margin:4px 0 0">O aluno escolhe o concurso numa lista e já recebe as matérias, tópicos e subtópicos do edital. Quando você atualiza um edital, os alunos veem o que falta e adicionam com um clique.</p></div><button class="btn primary sm" data-act="concEditar">+ Novo concurso</button></div>
+    ${linhas ? `<div class="stack" style="gap:8px">${linhas}</div>` : `<p class="muted" style="margin:0">Nenhum concurso cadastrado. Enquanto a lista estiver vazia, cada aluno digita o nome do concurso.</p>`}</div>`;
+}
+function openConcurso(id){
+  const c = id ? (S.concursos || []).find(x => x.id === id) : null;
+  $("#modalRoot").innerHTML = `<div class="scrim"><form class="modal wide" id="concForm" novalidate>
+    <h2>${c ? "Editar concurso" : "Novo concurso"}</h2>
+    <div class="field"><label for="cNome">Nome do concurso</label><input type="text" id="cNome" maxlength="80" value="${esc(c ? c.nome : "")}" placeholder="Ex.: TJ-SP Escrevente 2027"></div>
+    <div class="field"><label for="cEdital">Edital-modelo</label>
+      <textarea id="cEdital" placeholder="# Língua Portuguesa (peso 5)&#10;Interpretação de textos&#10;Crase&#10;- Casos obrigatórios&#10;- Casos facultativos&#10;&#10;# Direito Administrativo (peso 4)&#10;Atos administrativos&#10;- Atributos&#10;- Requisitos">${esc(c ? editalTexto(c.materias) : "")}</textarea>
+      <span class="small muted">Comece cada matéria com <b>#</b> e, se quiser, o peso de 1 a 5 entre parênteses. Os tópicos vêm nas linhas seguintes; subtópicos começam com <b>-</b>. Dá para colar o conteúdo programático do edital e ajustar.</span></div>
+    <div class="controls" style="justify-content:space-between"><span class="small" id="cCont"></span><button type="button" class="btn sm" id="cCopiar">Copiar das minhas matérias</button></div>
+    <div class="err" id="cErr" hidden></div>
+    <div class="actions"><button type="button" class="btn" id="kNo">Cancelar</button><button class="btn primary" type="submit" id="cSalvar">Salvar concurso</button></div>
+  </form></div>`;
+  const ta = $("#cEdital"), cont = () => { $("#cCont").textContent = resumoEdital(contarEdital(parseEdital(ta.value))); };
+  ta.addEventListener("input", cont); cont();
+  $("#cCopiar").onclick = () => {
+    const mats = (S.me && S.me.materias || []).map(m => ({ nome: m.nome, peso: m.peso || 3, topicos: (m.topicos || []).map(t => ({ nome: t.nome, subs: (t.subs || []).map(s => s.nome) })) }));
+    ta.value = editalTexto(mats); cont();
+  };
+  $("#kNo").onclick = closeModal;
+  $("#concForm").onsubmit = async e => {
+    e.preventDefault();
+    const nome = $("#cNome").value.trim(), mats = parseEdital(ta.value), er = $("#cErr");
+    if (nome.length < 2){ er.textContent = "Dê um nome ao concurso."; er.hidden = false; return; }
+    if (!mats.length){ er.textContent = "Escreva pelo menos uma matéria, começando a linha com #."; er.hidden = false; return; }
+    const btn = $("#cSalvar"); btn.disabled = true;
+    const q = c ? S.sb.from("concursos").update({ nome, materias: mats }).eq("id", c.id) : S.sb.from("concursos").insert({ nome, materias: mats });
+    const { error } = await q;
+    btn.disabled = false;
+    if (error){ er.textContent = error.code === "23505" ? "Já existe um concurso com esse nome." : errMsg(error); er.hidden = false; return; }
+    closeModal(); toast(c ? "Concurso atualizado." : "Concurso cadastrado."); carregarConcursos();
+  };
+  $("#cNome").focus();
+}
 // ---------- modelos de matérias para concursos ----------
 const MODELO = [
   { nome:"Língua Portuguesa", peso:5, t:["Interpretação de textos","Ortografia e acentuação","Classes de palavras","Sintaxe: termos da oração","Concordância verbal e nominal","Regência e crase","Pontuação","Colocação pronominal"] },
@@ -1191,6 +1320,7 @@ async function startSupa(user){
     $("#view").innerHTML = `<div class="empty"><h3>Não foi possível carregar seus dados</h3><p>${esc(errMsg(e))}</p><button class="btn primary" onclick="location.reload()">Tentar de novo</button></div>`;
     return;
   }
+  await carregarConcursos();
   S.meLoaded = true; render(true);
   S.sb.channel("grupo")
     .on("postgres_changes", { event: "*", schema: "public", table: "publico" }, ch => {
@@ -1199,6 +1329,7 @@ async function startSupa(user){
       if (ch.eventType === "DELETE") delete S.all[id]; else S.all[id] = pubRow(r);
       render();
     })
+    .on("postgres_changes", { event: "*", schema: "public", table: "concursos" }, () => { clearTimeout(S.tc); S.tc = setTimeout(carregarConcursos, 400); })
     .on("postgres_changes", { event: "*", schema: "public", table: "baralhos" }, ch => {
       const r = ch.new; if (!r || !r.user_id || r.user_id === S.uid) return;
       S.decks[r.user_id] = r.decks || {}; render();
@@ -1285,6 +1416,7 @@ function viewAdmin(){
       ${pend.length ? `<div class="stack" style="gap:8px">${pend.map(linhaPend).join("")}</div>` : `<p class="muted" style="margin:0">Nenhum pedido pendente. Quando alguém criar conta, aparece aqui.</p>`}</div>
     <div class="panel"><div class="panel-h"><h2>Com acesso</h2></div><div class="stack" style="gap:8px">${apr.map(linhaApr).join("")}</div></div>
     ${blq.length ? `<div class="panel"><div class="panel-h"><h2>Bloqueados</h2></div><div class="stack" style="gap:8px">${blq.map(linhaBlq).join("")}</div></div>` : ""}
+    ${adminConcursos()}
     <div class="notice small">Para redefinir a senha de alguém, use o painel do Supabase em Authentication → Users.</div>
   </div>`;
 }
@@ -1374,11 +1506,11 @@ function viewOnboarding(){
     <form class="panel stack" id="fOnb">
       <div class="form-grid">
         <div class="field"><label for="onbNome">Como quer aparecer no ranking</label><input type="text" id="onbNome" maxlength="40" placeholder="Ex.: Ana Souza" required></div>
-        <div class="field"><label for="onbConc">Concurso que está estudando</label><input type="text" id="onbConc" maxlength="80" placeholder="Ex.: TJ-SP Escrevente"></div>
+        ${campoConcurso("onb", null, "")}
         <div class="field"><label for="onbMeta">Meta semanal (horas)</label><input type="number" id="onbMeta" min="1" max="100" step="1" value="20"></div>
         <div class="field"><label for="onbProva">Data da prova (se já souber)</label><input type="date" id="onbProva"></div>
       </div>
-      <label class="check"><input type="checkbox" id="onbModelo" checked> Começar com as matérias básicas de concursos (Português, RLM, Constitucional, Administrativo, Informática). Você edita tudo depois.</label>
+      <label class="check"><input type="checkbox" id="onbModelo" checked> Montar minhas matérias automaticamente: com o edital-modelo do concurso escolhido ou, se ele não tiver, com as matérias básicas de concursos. Você edita tudo depois.</label>
       <div class="actions" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost" data-act="sair">Entrar com outra conta</button><button class="btn primary" type="submit">Começar</button></div>
     </form></div>`;
 }
@@ -1513,7 +1645,8 @@ function viewMaterias(){
     </div>${body}</div>`;
   }).join("");
   return `<div class="stack">
-    <div class="panel-h" style="margin:0"><div><p class="label">Edital</p><h1>Matérias e tópicos</h1></div></div>
+    <div class="panel-h" style="margin:0"><div><p class="label">Edital${S.me.concurso ? " · " + esc(S.me.concurso) : ""}</p><h1>Matérias e tópicos</h1></div></div>
+    ${bannerModelo()}
     <div class="legend"><span><b>Domínio</b> de cada tópico, no estilo cartão-resposta:</span><span><b>T</b> teoria lida</span><span><b>R</b> revisado</span><span><b>D</b> dominado</span><span>Clique na bolinha preenchida para voltar um nível.</span></div>
     ${cards || `<div class="panel empty"><h3>Cadastre a primeira matéria</h3><p>Depois adicione os tópicos e subtópicos do edital.</p></div>`}
     <form class="panel inline-add" data-form="addMat" style="margin:0"><input type="text" id="addMat" placeholder="Nova matéria (ex.: Direito Penal)" maxlength="80" required><button class="btn primary" type="submit">Adicionar matéria</button></form>
@@ -1685,10 +1818,10 @@ function viewPerfil(){
     <form class="panel stack" data-form="perfil">
       <div class="form-grid">
         <div class="field"><label for="pNome">Nome no ranking</label><input type="text" id="pNome" maxlength="40" value="${esc(me.apelido||"")}" required></div>
-        <div class="field"><label for="pConc">Concurso</label><input type="text" id="pConc" maxlength="80" value="${esc(me.concurso||"")}"></div>
+        ${campoConcurso("p", me.concursoId, me.concurso)}
         <div class="field"><label for="pMeta">Meta semanal (horas)</label><input type="number" id="pMeta" min="1" max="100" value="${me.metaSemanalH||20}"></div>
       </div>
-      <p class="small muted" style="margin:0">Use o mesmo nome de concurso que seus colegas (ex.: “TJ-SP Escrevente”) para aparecerem juntos no ranking. Maiúsculas e acentos não importam.</p>
+      <p class="small muted" style="margin:0">Escolha seu concurso na lista para aparecer junto com os colegas no ranking e receber o edital-modelo. Se ele não estiver na lista, peça ao organizador para cadastrar.</p>
       <div style="display:flex;justify-content:flex-end"><button class="btn primary" type="submit">Salvar perfil</button></div>
     </form>
     <div class="panel"><div class="panel-h" style="margin:0"><div><h2>Conta</h2><p class="small muted" style="margin:4px 0 0">${esc(S.email || "")}</p></div><button class="btn" data-act="sair">Sair da conta</button></div></div>
@@ -1795,6 +1928,20 @@ document.addEventListener("click", async e => {
   const act = el.dataset.act, me = S.me;
   if (act === "sair"){ el.disabled = true; try { await S.sb.auth.signOut(); } catch(_){ location.reload(); } return; }
   if (act === "admRecarregar"){ carregarAdmin(); return; }
+  if (act === "concEditar"){ openConcurso(el.dataset.id); return; }
+  if (act === "concAtivo"){
+    const c = (S.concursos || []).find(x => x.id === el.dataset.id); if (!c) return;
+    const { error } = await S.sb.from("concursos").update({ ativo: !c.ativo }).eq("id", c.id);
+    if (error){ toast(errMsg(error)); return; }
+    toast(c.ativo ? "Concurso oculto da lista de escolha." : "Concurso visível na lista."); carregarConcursos(); return;
+  }
+  if (act === "concApagar"){
+    const c = (S.concursos || []).find(x => x.id === el.dataset.id); if (!c) return;
+    if (!(await confirmBox(`Excluir o concurso “${c.nome}”? Os alunos que o escolheram mantêm as matérias e o nome do concurso, mas ele sai da lista e o edital-modelo deixa de existir.`, "Excluir"))) return;
+    const { error } = await S.sb.from("concursos").delete().eq("id", c.id);
+    if (error){ toast(errMsg(error)); return; }
+    toast("Concurso excluído."); carregarConcursos(); return;
+  }
   if (act === "admSet" || act === "admPapel"){
     const id = el.dataset.id, v = el.dataset.v, nome = el.dataset.nome;
     if (act === "admSet" && v === "aprovado"){ admAlterar(id, { status: "aprovado" }, "Acesso liberado para " + nome + "."); return; }
@@ -1837,6 +1984,13 @@ document.addEventListener("click", async e => {
   }
   if (act === "limparCron"){ if (await confirmBox("Apagar o cronograma atual?", "Apagar")){ delete me.cronograma; saveMe(); } return; }
   if (act === "rk"){ S.ui[el.dataset.k] = el.dataset.v; render(true); return; }
+  if (act === "aplicarModelo"){
+    const c = concursoDoAluno(); if (!c) return;
+    me.materias = me.materias || [];
+    const n = mesclarModelo(me.materias, c);
+    saveMe(); render(true);
+    toast(`Adicionados: ${n.m} matéria(s), ${n.t} tópico(s) e ${n.s} subtópico(s).`); return;
+  }
   if (act === "fcRevisar"){ sessaoRevisao(el.dataset.m || null); return; }
   if (act === "fcShuffle"){ sessaoEmbaralhada($("#fcShufMat").value, Number($("#fcShufN").value) || 20); return; }
   if (act === "fcNovo"){ openCard({ mid: el.dataset.m }); return; }
@@ -1899,6 +2053,7 @@ document.addEventListener("click", e => {
 document.addEventListener("change", e => {
   const el = e.target;
   if (el.dataset.act === "peso"){ const m = findMat(el.dataset.m); m.peso = Number(el.value); el.blur(); saveMe(); }
+  if (el.dataset.act === "concSel"){ const box = document.getElementById(el.dataset.p + "Outro"); if (box){ box.hidden = el.value !== "__outro"; if (!box.hidden) document.getElementById(el.dataset.p + "Conc").focus(); } return; }
   if (el.dataset.act === "uiSel"){ S.ui[el.dataset.k] = el.value; el.blur(); render(); }
 });
 document.addEventListener("submit", e => {
@@ -1907,8 +2062,9 @@ document.addEventListener("submit", e => {
   if (f.id === "fOnb"){
     e.preventDefault();
     const nome = $("#onbNome").value.trim(); if (!nome){ $("#onbNome").focus(); return; }
-    const materias = $("#onbModelo").checked ? MODELO.map((m, i) => ({ id: uid(), nome: m.nome, cor: CORES[i % CORES.length], peso: m.peso, topicos: m.t.map(n => ({ id: uid(), nome: n, status: 0, subs: [] })) })) : [];
-    S.me = { v: 1, apelido: nome.slice(0,40), concurso: $("#onbConc").value.trim().slice(0,80), metaSemanalH: Math.max(1, parseInt($("#onbMeta").value) || 20), dataProva: $("#onbProva").value || "", materias, criadoEm: new Date().toISOString() };
+    const cc = lerConcurso("onb"), temModelo = cc.c && (cc.c.materias || []).length;
+    const materias = !$("#onbModelo").checked ? [] : temModelo ? materiasDoModelo(cc.c) : MODELO.map((m, i) => ({ id: uid(), nome: m.nome, cor: CORES[i % CORES.length], peso: m.peso, topicos: m.t.map(n => ({ id: uid(), nome: n, status: 0, subs: [] })) }));
+    S.me = { v: 1, apelido: nome.slice(0,40), concurso: cc.nome, concursoId: cc.id, metaSemanalH: Math.max(1, parseInt($("#onbMeta").value) || 20), dataProva: $("#onbProva").value || "", materias, criadoEm: new Date().toISOString() };
     location.hash = "painel"; S.tab = "painel"; setTab("painel", true);
     saveMe(); render(true); return;
   }
@@ -1984,8 +2140,8 @@ document.addEventListener("submit", e => {
   }
   if (kind === "perfil"){
     const nome = $("#pNome").value.trim(); if (!nome) return;
-    me.apelido = nome.slice(0,40); me.concurso = $("#pConc").value.trim().slice(0,80); me.metaSemanalH = Math.max(1, parseInt($("#pMeta").value) || 20);
-    document.activeElement.blur(); saveMe(); render(true); toast("Perfil salvo."); return;
+    me.apelido = nome.slice(0,40); const cc = lerConcurso("p"); me.concurso = cc.nome; me.concursoId = cc.id; me.metaSemanalH = Math.max(1, parseInt($("#pMeta").value) || 20);
+    document.activeElement.blur(); saveMe(); render(true); toast(faltandoDoModelo() ? "Perfil salvo. Veja em Matérias o que o edital-modelo do seu concurso pode acrescentar." : "Perfil salvo."); return;
   }
 });
 
